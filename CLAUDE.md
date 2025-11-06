@@ -98,8 +98,150 @@ Use these agents proactively:
 - **NEVER** commit to timelines without checking dependencies
 - **ALWAYS** validate that new initiatives don't duplicate existing ones
 - Check existing documentation before creating new files
-- Follow git workflow - create feature branches, PR to main
+- **ALWAYS** work on feature branches - **NEVER** commit directly to main
+- **NEVER** create git commits without user running `/commit` command
 - Keep documentation boundaries clear (see `architecture/README.md`)
+
+## Git Workflow
+
+**CRITICAL**: All documentation work happens on feature branches. Direct commits to main are not allowed.
+
+### Branch-Based Workflow
+
+**Branch Naming Convention:**
+- Initiative planning: `initiative/[initiative-name]`
+- Documentation updates: `docs/[description]`
+- Repository docs: `repo/[repo-name]`
+- Architecture changes: `arch/[description]`
+
+**Example:**
+```bash
+git checkout -b initiative/entity-deduplication
+# Make changes...
+git add .
+git commit -m "feat: add entity deduplication initiative design spec"
+git push -u origin initiative/entity-deduplication
+gh pr create --title "Initiative: Entity Deduplication System"
+```
+
+### Initiative Planning Workflow with Branches
+
+The initiative planning workflow creates a single PR that evolves through multiple stages:
+
+1. **Design Brainstorm** (creates branch + PR)
+   - `/initiative-brainstorm-design [idea]` - Non-technical design specification
+   - Creates feature branch `initiative/[name]`
+   - Creates initial design document
+   - Opens PR for review
+
+2. **Technical Brainstorm** (adds to PR)
+   - `/initiative-brainstorm-technical [initiative-name]` - Technical architecture
+   - Works within existing branch
+   - Adds technical requirements to design document
+   - Updates PR
+
+3. **Planning** (adds to PR)
+   - `/initiative-plan [initiative-name]` - Implementation breakdown
+   - Works within existing branch
+   - Creates plan document
+   - Updates PR with plan
+
+4. **Review and Merge** (manual)
+   - Team reviews the complete initiative (design + technical + plan)
+   - Merge PR to main when approved
+
+5. **Issue Creation** (after merge)
+   - `/initiative-create-issues [initiative-name]` - Generate GitHub issues
+   - **Must be on main branch** (after PR is merged)
+   - Moves files from `_planning/` to active subdirectory
+   - Creates issues in appropriate repository
+
+### Branch Verification
+
+All commands that modify documentation **must** verify they are on a feature branch (not main):
+
+```bash
+# Check current branch
+CURRENT_BRANCH=$(git branch --show-current)
+
+# If on main, either create a branch or abort
+if [ "$CURRENT_BRANCH" = "main" ]; then
+  echo "ERROR: Cannot modify documentation on main branch"
+  echo "Please create a feature branch first:"
+  echo "  git checkout -b initiative/[name]"
+  exit 1
+fi
+```
+
+### PR Management
+
+**Opening PRs:**
+```bash
+gh pr create \
+  --title "[Type]: [Description]" \
+  --body "$(cat <<'EOF'
+## Changes
+- Added/updated [description]
+
+## Documentation Updates
+- [ ] Updated indexes
+- [ ] Validated cross-references
+- [ ] Ran doc-review
+
+## Related
+- Initiative: [name]
+- Affected repos: [list]
+EOF
+)"
+```
+
+**PR Types:**
+- `Initiative: [Name]` - Initiative planning documents
+- `Docs: [Description]` - General documentation updates
+- `Repo: [Name]` - Repository documentation
+- `Arch: [Description]` - Architecture documentation
+
+### When to Work on Main
+
+**ONLY these scenarios allow main branch work:**
+- `/initiative-create-issues` - After initiative PR is merged
+- Emergency documentation fixes (with explicit approval)
+
+### Committing Changes
+
+**CRITICAL RULE: NEVER commit without the user running `/commit`**
+
+Claude should **NEVER**:
+- Run `git commit` directly via Bash tool
+- Commit as part of any other command workflow
+- Commit automatically after file changes
+- Commit without explicit `/commit` command from user
+
+The **ONLY** way to create commits is:
+```bash
+# User stages files
+git add [files]
+
+# User runs commit command
+/commit
+```
+
+**The `/commit` command:**
+- Analyzes staged changes
+- Generates appropriate conventional commit message
+- Shows the commit message to user
+- Creates the commit immediately (running `/commit` IS the permission)
+
+**Why this matters:**
+- User controls exactly when commits happen
+- Ensures proper commit message format
+- Maintains clean git history
+- Prevents accidental or premature commits
+
+**If you need to suggest committing:**
+- Tell the user: "You can commit these changes with `/commit`"
+- Never run git commit yourself
+- Never ask permission to commit (running `/commit` is the permission)
 
 ## Common Patterns
 
@@ -228,9 +370,10 @@ When making changes to platform docs:
 ## Custom Commands
 
 ### Initiative Planning Workflow
-- `/initiative-brainstorm [idea]` - Develop initiative specification interactively
+- `/initiative-brainstorm-design [idea]` - Create non-technical design specification (designers/PMs)
+- `/initiative-brainstorm-technical [initiative-name]` - Add technical architecture requirements (architects)
 - `/initiative-plan [initiative-name]` - Break down initiative into implementation phases
-- `/initiative-create-issues [initiative-name]` - Create GitHub milestone and issues
+- `/initiative-create-issues [initiative-name]` - Create GitHub milestone and issues (after PR merge)
 
 ### Issue Management
 - `/issue-identify [initiative-name|filter]` - Find next issue to work on
@@ -239,29 +382,61 @@ When making changes to platform docs:
 ### Quality Assurance
 - `/doc-review [path]` - Comprehensive documentation review
 
-**Typical Workflow:**
-1. `/initiative-brainstorm [idea]` - Develop specification through guided questions
+### Git Workflow
+- `/commit` - Create commit with properly formatted conventional commit message
+  - **CRITICAL**: This is the ONLY way Claude should create commits
+  - Analyzes staged changes and generates appropriate message
+  - Running this command IS the user's permission to commit
+  - Commits immediately without additional confirmation
+
+**Typical Workflow (Branch-Based):**
+
+1. **Design Phase** - `/initiative-brainstorm-design [idea]`
+   - Non-technical specification for designers/product managers
    - Uses `docs-finder` agent to check for existing initiatives
+   - Creates feature branch `initiative/[name]`
    - Saves to `initiatives/_planning/[name].md`
    - Uses `doc-updater` agent to update indexes after creation
    - Uses `architecture-validator` agent to validate the spec
-2. `/initiative-plan [initiative-name]` - Create detailed implementation plan
+   - Opens PR for the initiative
+
+2. **Technical Phase** - `/initiative-brainstorm-technical [initiative-name]`
+   - Technical architecture for software architects
+   - Works within existing initiative branch
+   - Uses `docs-finder` agent to discover related documentation
+   - Adds technical requirements to `initiatives/_planning/[name].md`
+   - Uses `doc-updater` agent to update indexes
+   - Uses `architecture-validator` agent to validate technical spec
+   - Updates PR with technical additions
+
+3. **Planning Phase** - `/initiative-plan [initiative-name]`
+   - Detailed implementation breakdown
+   - Works within existing initiative branch
    - Uses `docs-finder` agent to discover related documentation
    - Saves to `initiatives/_planning/[name]-plan.md`
    - Uses `doc-updater` agent to update effort estimates and timeline
    - Uses `architecture-validator` agent to validate completeness
-3. `/initiative-create-issues [initiative-name]` - Generate trackable issues
+   - Updates PR with implementation plan
+
+4. **Review and Merge** (Manual)
+   - Team reviews complete initiative (design + technical + plan)
+   - Approve and merge PR to main
+   - Initiative documents now on main branch in `_planning/`
+
+5. **Issue Creation** - `/initiative-create-issues [initiative-name]`
+   - **Must run on main branch** (after PR merge)
    - Asks which repository to create issues in (for multi-repo initiatives)
    - **Moves files** from `_planning/` to `initiatives/[name]/` subdirectory
    - Creates GitHub milestone and issues in chosen repository
    - Creates `initiatives/[name]/issues.md` tracking document
    - Uses `doc-updater` agent to update status and references
    - Uses `architecture-validator` agent to verify everything
-4. `/issue-identify` - Find next issue to work on
-5. `/issue-analyze [issue-number]` - Clarify requirements before starting
-6. Work on documentation/planning
-7. `/doc-review [changed-files]` - Review before committing
-   - Uses `architecture-validator` agent for comprehensive review
+
+6. **Development Workflow:**
+   - `/issue-identify` - Find next issue to work on
+   - `/issue-analyze [issue-number]` - Clarify requirements before starting
+   - Work on implementation in appropriate repository
+   - `/doc-review [changed-files]` - Review docs before committing (uses `architecture-validator`)
 
 ## Common Questions
 

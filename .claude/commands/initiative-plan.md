@@ -1,6 +1,41 @@
 **CRITICAL INSTRUCTION: THINK DEEPLY AND SYSTEMATICALLY**
 You must spend significant mental effort breaking down the initiative. Take your time to understand the full scope, identify logical boundaries, and create a hierarchical structure that ensures nothing is missed.
 
+**STEP 0: VERIFY BRANCH AND PREREQUISITES**
+
+Verify we're on the correct initiative branch with both design and technical specs:
+
+```bash
+# Check current branch
+CURRENT_BRANCH=$(git branch --show-current)
+
+# Should be on initiative branch
+if [[ ! "$CURRENT_BRANCH" =~ ^initiative/ ]]; then
+  echo "ERROR: Must be on an initiative branch"
+  echo "Current branch: $CURRENT_BRANCH"
+  echo ""
+  echo "Please switch to the initiative branch:"
+  echo "  git checkout initiative/$ARGUMENTS"
+  exit 1
+fi
+
+# Check if initiative spec exists
+if [ ! -f "initiatives/_planning/$ARGUMENTS.md" ]; then
+  echo "ERROR: Initiative specification not found"
+  echo "Expected: initiatives/_planning/$ARGUMENTS.md"
+  echo ""
+  echo "Please run /initiative-brainstorm-design and /initiative-brainstorm-technical first"
+  exit 1
+fi
+
+# Check for uncommitted changes
+if ! git diff-index --quiet HEAD --; then
+  echo "WARNING: You have uncommitted changes"
+  echo "Please commit changes before continuing"
+  exit 1
+fi
+```
+
 **STEP 1: DOCUMENTATION DISCOVERY**
 
 First, use the Task tool to launch the `docs-finder` agent to discover existing documentation:
@@ -165,7 +200,27 @@ Store the plan in `initiatives/_planning/$ARGUMENTS-plan.md` with clear phase/ta
 [How to measure successful completion]
 ```
 
-**STEP 7: UPDATE PLATFORM DOCUMENTATION**
+**STEP 7: COMMIT IMPLEMENTATION PLAN**
+
+After creating the plan document:
+
+```bash
+# Add the new plan file
+git add initiatives/_planning/$ARGUMENTS-plan.md
+
+# Commit with descriptive message
+git commit -m "feat(initiative): add implementation plan for $ARGUMENTS
+
+- Hierarchical breakdown into phases and tasks
+- Detailed effort estimates and dependencies
+- Risk mitigation strategies
+- Success metrics and acceptance criteria"
+
+# Push to the PR
+git push
+```
+
+**STEP 8: UPDATE PLATFORM DOCUMENTATION**
 
 After creating the plan, use the Task tool to launch the `doc-updater` agent:
 - The agent will update `initiatives/effort-estimation.md` if needed
@@ -178,6 +233,94 @@ Then use the Task tool to launch the `architecture-validator` agent to validate:
 - Cross-references are complete
 - All required sections are present
 - No duplication exists
+
+**STEP 9: UPDATE PULL REQUEST**
+
+Update the PR with planning phase completion:
+
+```bash
+# Add comment to PR
+gh pr comment --body "## ✅ Implementation Planning Phase Complete
+
+Implementation plan has been created with detailed breakdown of phases, tasks, and effort estimates.
+
+### What's Included
+- Hierarchical task breakdown (phases → tasks → subtasks)
+- Effort estimates and sizing
+- Task dependencies and sequencing
+- Risk mitigation strategies
+- Success metrics and acceptance criteria
+- Repository-specific implementation details
+
+### Initiative Complete
+- ✅ Design specification (business & product requirements)
+- ✅ Technical architecture (integration & implementation approach)
+- ✅ Implementation plan (phases, tasks, effort estimates)
+
+### Ready for Review
+This initiative is now ready for final review and approval:
+- [ ] Product/business review
+- [ ] Technical architecture review
+- [ ] Effort estimation review
+- [ ] Priority confirmation
+
+### After Merge
+Once this PR is merged to main, create GitHub issues with:
+\`\`\`
+/initiative-create-issues $ARGUMENTS
+\`\`\`
+
+This will:
+- Move initiative to active status
+- Create GitHub milestone
+- Generate issues from the plan
+- Set up issue tracking"
+```
+
+**STEP 10: NEXT STEPS GUIDANCE**
+
+Provide clear guidance to the user:
+
+```
+✅ IMPLEMENTATION PLAN COMPLETE
+
+Branch: initiative/$ARGUMENTS
+PR: [PR URL]
+Documents:
+- initiatives/_planning/$ARGUMENTS.md (design + technical specs)
+- initiatives/_planning/$ARGUMENTS-plan.md (implementation plan)
+
+INITIATIVE STATUS:
+- ✅ Design specification (business & product requirements)
+- ✅ Technical architecture (integration & implementation approach)
+- ✅ Implementation plan (phases, tasks, effort estimates)
+
+READY FOR REVIEW AND MERGE:
+
+1. Review the complete initiative
+   - Design specification
+   - Technical architecture
+   - Implementation plan
+   - Effort estimates
+
+2. Get stakeholder approvals
+   - Product/business stakeholders
+   - Technical architects
+   - Engineering leads
+
+3. Merge the PR
+   - All phases complete
+   - Reviews approved
+   - Merge to main branch
+
+4. Create GitHub issues (after merge)
+   Run: /initiative-create-issues $ARGUMENTS
+   - Must be run from main branch (after PR merge)
+   - Creates GitHub milestone
+   - Generates issues from plan
+   - Moves initiative to active subdirectory
+   - Sets up issue tracking
+```
 
 **CRITICAL FINAL INSTRUCTION:**
 Before completing your planning:

@@ -6,15 +6,46 @@ Create a GitHub milestone and issues for an initiative based on the implementati
 ```
 
 **Prerequisites:**
+- Initiative PR has been merged to main
 - Initiative specification exists: `initiatives/_planning/[initiative-name].md`
 - Implementation plan exists: `initiatives/_planning/[initiative-name]-plan.md`
 - User confirms they want to create issues
 
+**CRITICAL**: This command must be run from the main branch after the initiative PR has been merged.
+
 ## Process
+
+### STEP 0: VERIFY ON MAIN BRANCH
+
+This command must only run on main branch after the initiative PR is merged:
+
+```bash
+# Check current branch
+CURRENT_BRANCH=$(git branch --show-current)
+
+# Must be on main
+if [ "$CURRENT_BRANCH" != "main" ]; then
+  echo "ERROR: This command must be run from the main branch"
+  echo "Current branch: $CURRENT_BRANCH"
+  echo ""
+  echo "WORKFLOW:"
+  echo "1. Ensure initiative PR is approved and merged"
+  echo "2. Switch to main: git checkout main"
+  echo "3. Pull latest: git pull origin main"
+  echo "4. Run: /initiative-create-issues $ARGUMENTS"
+  echo ""
+  echo "WHY: Initiative files must be on main before creating issues"
+  echo "     Issues will reference the merged specification and plan"
+  exit 1
+fi
+
+# Ensure main is up to date
+git pull origin main
+```
 
 ### STEP 1: VERIFY PREREQUISITES
 
-Check that required documents exist:
+Check that required documents exist on main branch:
 ```bash
 # Check for initiative spec
 test -f initiatives/_planning/$ARGUMENTS.md
