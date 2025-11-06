@@ -138,8 +138,18 @@ Use these agents proactively:
 Initiatives move through three stages:
 
 1. **Planning** (`_planning/`) - Scoping, estimation, prioritization
+   - `/initiative-brainstorm` creates `_planning/[name].md`
+   - `/initiative-plan` creates `_planning/[name]-plan.md`
+   - Both files stay in `_planning/` during planning phase
+
 2. **Active** (own subdirectory) - Contains specs, progress tracking, related docs
+   - `/initiative-create-issues` moves files to `initiatives/[name]/` subdirectory
+   - Creates `initiatives/[name]/issues.md` tracking document
+   - Issues created in appropriate GitHub repository
+   - Initiative marked as "Active"
+
 3. **Complete** (`_complete/`) - Shipped to production, moved for historical reference
+   - Move entire subdirectory: `initiatives/[name]/` → `initiatives/_complete/[name]/`
 
 **Status Indicators:**
 - 🔴 Blocked - Cannot proceed due to dependencies
@@ -232,15 +242,21 @@ When making changes to platform docs:
 **Typical Workflow:**
 1. `/initiative-brainstorm [idea]` - Develop specification through guided questions
    - Uses `docs-finder` agent to check for existing initiatives
+   - Saves to `initiatives/_planning/[name].md`
    - Uses `doc-updater` agent to update indexes after creation
    - Uses `architecture-validator` agent to validate the spec
 2. `/initiative-plan [initiative-name]` - Create detailed implementation plan
    - Uses `docs-finder` agent to discover related documentation
+   - Saves to `initiatives/_planning/[name]-plan.md`
    - Uses `doc-updater` agent to update effort estimates and timeline
    - Uses `architecture-validator` agent to validate completeness
 3. `/initiative-create-issues [initiative-name]` - Generate trackable issues
-   - Uses `doc-updater` agent to update tracking links
-   - Uses `architecture-validator` agent to verify cross-references
+   - Asks which repository to create issues in (for multi-repo initiatives)
+   - **Moves files** from `_planning/` to `initiatives/[name]/` subdirectory
+   - Creates GitHub milestone and issues in chosen repository
+   - Creates `initiatives/[name]/issues.md` tracking document
+   - Uses `doc-updater` agent to update status and references
+   - Uses `architecture-validator` agent to verify everything
 4. `/issue-identify` - Find next issue to work on
 5. `/issue-analyze [issue-number]` - Clarify requirements before starting
 6. Work on documentation/planning

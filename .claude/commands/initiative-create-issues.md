@@ -37,7 +37,57 @@ Parse the plan document to extract:
 - **Effort Estimates**: Size and time estimates
 - **Repositories**: Which repos each task affects
 
-### STEP 3: CREATE MILESTONE
+### STEP 3: DETERMINE TARGET REPOSITORY
+
+**For single-repo initiatives:**
+- Issues go in the affected repository
+
+**For multi-repo initiatives:**
+Ask the user to choose the **primary repository** where most issues should be created:
+- List affected repositories from the initiative spec
+- Recommend the repository where most implementation work will happen
+- Explain that some issues may need to be created in other repos manually
+
+**Example prompt:**
+```
+This initiative affects multiple repositories:
+- mystage-event-sourcing (primary - deduplication logic)
+- mystage-admin-interface (secondary - review UI)
+
+I recommend creating issues in: mystage-event-sourcing
+
+Where would you like to create the GitHub milestone and issues?
+1. mystage-event-sourcing (recommended)
+2. mystage-admin-interface
+3. mystage-platform (for cross-cutting planning work)
+```
+
+Store the chosen repository for use in later steps.
+
+### STEP 4: MOVE TO ACTIVE SUBDIRECTORY
+
+Before creating issues, move the initiative from planning to active:
+
+**Create subdirectory:**
+```bash
+mkdir -p initiatives/$ARGUMENTS
+```
+
+**Move files:**
+```bash
+# Move spec
+mv initiatives/_planning/$ARGUMENTS.md initiatives/$ARGUMENTS/
+
+# Move plan
+mv initiatives/_planning/$ARGUMENTS-plan.md initiatives/$ARGUMENTS/
+
+# Create issues tracking document location
+# (will be created in STEP 8)
+```
+
+**Update internal references if needed** (links within docs may need updating).
+
+### STEP 5: CREATE MILESTONE
 
 Ask user for milestone details:
 - **Milestone Name**: e.g., "Entity Deduplication System" or "Database Schema Tooling"
@@ -54,7 +104,10 @@ Or if you prefer to use the milestone API:
 gh api repos/:owner/:repo/milestones -f title="[milestone-name]" -f description="[description]" -f due_on="[date]"
 ```
 
-### STEP 4: CREATE LABELS
+### STEP 6: CREATE LABELS
+
+**Note**: Labels are created in the chosen target repository.
+
 
 Ensure necessary labels exist:
 ```bash
@@ -70,7 +123,10 @@ gh label create "medium-priority" --description "Medium priority work" --color "
 gh label create "low-priority" --description "Low priority work" --color "0e8a16" || true
 ```
 
-### STEP 5: GENERATE ISSUES FROM PLAN
+### STEP 7: GENERATE ISSUES FROM PLAN
+
+**Create issues in the target repository** (determined in STEP 3).
+
 
 For each task in the implementation plan, create a GitHub issue:
 
@@ -129,6 +185,9 @@ Implementation plan: `initiatives/_planning/[initiative-name]-plan.md`
 
 **Create each issue:**
 ```bash
+# Change to target repository directory first (if not platform repo)
+cd /Users/clint/Projects/mystage/[target-repo]
+
 gh issue create \
   --title "[Issue Title]" \
   --body "[Issue Body]" \
@@ -138,7 +197,12 @@ gh issue create \
   --label "[type-labels]"
 ```
 
-### STEP 6: LINK DEPENDENCIES
+**For multi-repo initiatives:**
+- Create most issues in primary repo
+- Note in tracking document which issues belong in other repos
+- User can create those issues manually or you can help create them in other repos
+
+### STEP 8: LINK DEPENDENCIES
 
 After all issues are created:
 1. Go through created issues
@@ -148,17 +212,20 @@ gh issue comment [issue-number] --body "Depends on: #[dependency-issue-number]"
 ```
 3. Update dependency issues with "Blocks: #[blocked-issue]" comments
 
-### STEP 7: CREATE ISSUE TRACKING DOCUMENT
+### STEP 9: CREATE ISSUE TRACKING DOCUMENT
 
-Create a tracking document in the initiative directory:
-`initiatives/_planning/[initiative-name]-issues.md`
+Create a tracking document in the initiative subdirectory:
+`initiatives/[initiative-name]/issues.md`
+
+**Note**: Initiative is now in its own subdirectory since it's active.
 
 ```markdown
 # [Initiative Name] - Issue Tracking
 
 **Milestone**: [Milestone Name]
+**Repository**: [Target repository name]
 **Created**: [Date]
-**Status**: Planning / Active / Complete
+**Status**: Active
 
 ## Issues by Phase
 
@@ -179,8 +246,12 @@ Create a tracking document in the initiative directory:
 
 ## Quick Links
 - [Milestone on GitHub]([url])
-- [Initiative Spec](initiatives/_planning/[initiative-name].md)
-- [Implementation Plan](initiatives/_planning/[initiative-name]-plan.md)
+- [Initiative Spec]([initiative-name].md)
+- [Implementation Plan]([initiative-name]-plan.md)
+
+## Notes
+- **Repository**: Most issues created in [target-repo]
+- **Multi-repo**: [If applicable, list issues that should be created in other repos]
 
 ## Progress
 - **Total Issues**: [count]
@@ -190,14 +261,20 @@ Create a tracking document in the initiative directory:
 - **Open**: [count]
 ```
 
-### STEP 8: SUMMARY OUTPUT
+### STEP 10: SUMMARY OUTPUT
 
 Provide summary to user:
 
 ```
 INITIATIVE ISSUES CREATED: [Initiative Name]
 
+MOVED TO ACTIVE:
+- initiatives/[initiative-name]/[initiative-name].md (spec)
+- initiatives/[initiative-name]/[initiative-name]-plan.md (plan)
+- initiatives/[initiative-name]/issues.md (tracking)
+
 MILESTONE: [Milestone Name]
+- Repository: [target-repo]
 - URL: [milestone-url]
 - Due Date: [date]
 
@@ -220,7 +297,9 @@ LABELS APPLIED:
 - [priority labels]
 - [type labels]
 
-TRACKING DOCUMENT: initiatives/_planning/[initiative-name]-issues.md
+TRACKING DOCUMENT: initiatives/[initiative-name]/issues.md
+
+GITHUB REPOSITORY: [target-repo-name]
 
 NEXT STEPS:
 1. Review issues for accuracy
@@ -230,29 +309,45 @@ NEXT STEPS:
 5. Use /issue-analyze before starting each issue
 ```
 
-### STEP 9: DOCUMENTATION UPDATES
+### STEP 11: DOCUMENTATION UPDATES
 
 Use the Task tool to launch the `doc-updater` agent to automatically update:
-- Add issue tracking link to initiative spec
-- Update `initiatives/README.md` with milestone link
-- Update initiative status from Planning to Active
+- Update `initiatives/README.md`:
+  - Move initiative from `_planning/` reference to active subdirectory
+  - Update status from Planning to Active
+  - Add milestone link
 - Update `initiatives/timeline.md` if dates are set
-- Ensure all cross-references are established
+- Ensure all cross-references point to new subdirectory location
 
 Then use the Task tool to launch the `architecture-validator` agent to verify:
 - All documentation is properly cross-referenced
 - Issue tracking document is complete
 - Initiative status is correctly updated
+- File moves were successful
 
-### STEP 10: VERIFICATION
+### STEP 12: VERIFICATION
 
 Verify all issues created correctly:
 ```bash
+# Change to target repository
+cd /Users/clint/Projects/mystage/[target-repo]
+
 # List all issues in milestone
 gh issue list --milestone "[Milestone Name]"
 
 # Check labels are applied
 gh issue list --label "initiative:$ARGUMENTS"
+```
+
+Verify file moves:
+```bash
+# Verify subdirectory exists
+ls -la initiatives/[initiative-name]/
+
+# Verify files moved
+test -f initiatives/[initiative-name]/[initiative-name].md
+test -f initiatives/[initiative-name]/[initiative-name]-plan.md
+test -f initiatives/[initiative-name]/issues.md
 ```
 
 ## Options

@@ -10,18 +10,32 @@ Initiatives move through three stages:
 
 ### 1. Planning (`_planning/`)
 New initiatives start here during the planning phase. These are being:
-- Scoped and defined
+- Scoped and defined (via `/initiative-brainstorm`)
+- Implementation planned (via `/initiative-plan`)
 - Estimated for effort
 - Analyzed for dependencies
 - Prioritized against other work
 
+Files stay in `_planning/` until issues are created:
+- `_planning/[initiative-name].md` - Initiative specification
+- `_planning/[initiative-name]-plan.md` - Implementation plan
+
 ### 2. Active (`<initiative-name>/`)
-Once an initiative is approved and begins active development, it moves from `_planning/` to its own subdirectory:
-- `initiatives/account-deletion/` - Contains specs, progress tracking, related docs
-- Each initiative gets its own workspace for implementation artifacts
+Once issues are created (via `/initiative-create-issues`), the initiative moves to its own subdirectory:
+- Files moved: `_planning/[name].md` and `_planning/[name]-plan.md` → `initiatives/[name]/`
+- New file created: `initiatives/[name]/issues.md` - Issue tracking document
+- GitHub milestone created in appropriate repository
+- Initiative marked as "Active"
+
+Example: `initiatives/entity-deduplication/`
+- `entity-deduplication.md` - Spec
+- `entity-deduplication-plan.md` - Implementation plan
+- `issues.md` - Issue tracking
 
 ### 3. Complete (`_complete/`)
-When an initiative is shipped to production and closed, it moves to `_complete/` for historical reference.
+When an initiative is shipped to production and closed, the entire subdirectory moves to `_complete/`:
+- `initiatives/[name]/` → `initiatives/_complete/[name]/`
+- Preserves all history and tracking documents
 
 **Note**: All initiatives below are currently in the planning phase (`_planning/`).
 

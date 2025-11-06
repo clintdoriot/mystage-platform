@@ -128,6 +128,8 @@ Identify and document dependencies on other initiatives:
 
 Store the plan in `initiatives/_planning/$ARGUMENTS-plan.md` with clear phase/task/subtask hierarchy.
 
+**Note**: The plan will stay in `_planning/` until issues are created. When you run `/initiative-create-issues`, both the spec and plan will be moved to `initiatives/[initiative-name]/` subdirectory (marking it as active).
+
 **Plan structure:**
 ```
 # Initiative Implementation Plan: [Initiative Name]
