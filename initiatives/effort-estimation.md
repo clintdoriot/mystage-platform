@@ -290,15 +290,17 @@
   - Effort estimation & timeline: 1 week ⏳ (in progress)
 
 ### Developer Onboarding
-- **Size**: M (3-4 weeks)
+- **Size**: M (2-3 weeks)
 - **Complexity**: Low-Medium - Documentation & tooling setup
 - **Risk**: 🟢 Low - Process improvement
 - **Dependencies**: Platform documentation, Database schema tooling
 - **Priority**: Medium - Improves team efficiency
 - **Effort Breakdown**:
+  - Automated setup tooling (GCP Secret Manager scripts): 3-5 days
+  - Onboarding checklist: 1-2 days
   - Onboarding documentation: 1-2 weeks
-  - Setup automation: 1-2 weeks
-  - Developer environment guides: 1 week
+  - Per-repo setup guides: 1-2 days each
+  - Review and polish: 2-3 days
 
 ## In-Flight Work
 

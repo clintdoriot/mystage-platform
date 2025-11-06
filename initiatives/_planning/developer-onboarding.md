@@ -23,6 +23,20 @@ Enable new developers to:
 
 ## Key Components
 
+### 0. Automated Setup Tooling
+**Scripts per repository** (`scripts/setup-env.sh` or similar):
+- Fetch environment variables from GCP Secret Manager
+- Generate `.env` files automatically
+- Validate required secrets are present
+- Set up Firebase project configuration
+- Install dependencies using appropriate package manager
+
+**Shared pattern documentation** (in platform repo):
+- Template script for GCP Secret Manager integration
+- Secret naming conventions across repos
+- Authentication patterns (gcloud auth)
+- Error handling and troubleshooting
+
 ### 1. Platform Overview
 - System architecture
 - Repository relationships
@@ -30,11 +44,17 @@ Enable new developers to:
 - Technology stack summary
 
 ### 2. Development Environment Setup
-- Required tools and services
+- Required tools and services (uv, Firebase CLI, Node, etc.)
 - Firebase project access
 - GCP configuration
 - Local development setup
-- Environment variables and secrets
+- **Environment variables and secrets**:
+  - **Automated .env generation** from GCP Secret Manager
+  - Scripts in each repo (`scripts/setup-env.sh` or similar)
+  - Shared pattern/template documented in platform
+  - Secret naming conventions
+  - Troubleshooting common issues
+- **Onboarding checklist** (step-by-step setup verification)
 
 ### 3. Repository-Specific Guides
 For each repo:
@@ -74,12 +94,18 @@ For each repo:
 
 ## Estimated Effort
 
-Initial version: 1-2 weeks
+Initial version: 2-3 weeks
 Ongoing maintenance: continuous
 
 Breakdown:
+- **Automated setup tooling**: 3-5 days
+  - GCP Secret Manager integration pattern: 1 day
+  - Script templates and examples: 1 day
+  - Per-repo setup scripts: 1-3 days (depends on number of repos)
+  - Testing and validation: 1 day
+- **Onboarding checklist**: 1-2 days
 - Platform overview: 2-3 days
-- Environment setup: 2-3 days
+- Environment setup documentation: 2-3 days
 - Per-repo guides: 1-2 days each
 - Common tasks: 2-3 days
 - Access documentation: 1 day
@@ -99,14 +125,41 @@ High - Currently blocking efficient team scaling
 
 ## Structure
 
-Suggested location: `platform/docs/developer-onboarding/`
-- README.md (start here)
+### Platform Documentation
+**Location**: `platform/docs/developer-onboarding/`
+- README.md (start here with onboarding checklist)
 - architecture-overview.md
-- environment-setup.md
-- repo-guides/ (folder)
+- environment-setup.md (includes GCP Secret Manager pattern)
+- repo-guides/ (folder with per-repo setup)
 - common-tasks/ (folder)
 - access-credentials.md
 - development-standards.md
+- troubleshooting.md
+
+### Per-Repository Tooling
+**Location**: Each repo's `scripts/` directory
+- `scripts/setup-env.sh` (or `.py`) - Fetch secrets and generate .env
+- `scripts/validate-env.sh` - Verify environment is correctly set up
+- `scripts/README.md` - Document available setup scripts
+
+**Repositories needing setup scripts**:
+- mystage-event-sourcing
+- mystage-admin-interface
+- mystage-app-backend
+- mystage-databases (for deployment scripts)
+
+**Example script structure**:
+```bash
+#!/bin/bash
+# scripts/setup-env.sh
+# Fetches environment variables from GCP Secret Manager and generates .env file
+
+# 1. Check gcloud auth
+# 2. Fetch secrets from Secret Manager
+# 3. Generate .env.development.local or appropriate file
+# 4. Validate required variables present
+# 5. Output success/next steps
+```
 
 ## Related Initiatives
 

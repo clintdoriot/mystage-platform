@@ -67,7 +67,7 @@ See [initiatives/platform-planning.md](initiatives/_planning/platform-planning.m
 
 These repos are listed for reference but are no longer actively developed:
 
-- **mystage-admin-api** - Old repo for admin functions, never fully utilized. Now deprecated, though may contain useful geolocation services that could be migrated.
+- **[mystage-admin-api](repos/mystage-admin-api.md)** - Old repo for admin functions, never fully utilized. Now deprecated, being replaced by mystage-admin-interface. May contain useful geolocation services that could be migrated.
 - **mystage-resume-monorepo** - Resume management system based on similar tech stack to admin-interface, but evolved into its own project.
 - **mystage-resume-processing** - Preliminary resume management system, being migrated to monorepo.
 
