@@ -58,7 +58,7 @@ See `architecture/README.md` for detailed guidance on what belongs where.
   - `README.md` - Initiative index with priorities and milestones
   - `effort-estimation.md` - Comprehensive effort estimates (130-173 weeks)
   - `timeline.md` - 10-month implementation plan with Gantt charts
-  - `_planning/*.md` - 27 detailed initiative documents
+  - `_planning/*.md` - 28 detailed initiative documents
   - `_complete/` - Completed initiatives (historical reference)
   - Active initiatives get their own subdirectories when work begins
 - `architecture/` - Platform-wide architecture documentation
@@ -315,7 +315,7 @@ Initiatives move through three stages:
 
 ## Key Metrics
 
-- **Total Initiatives**: 27 across 8 categories
+- **Total Initiatives**: 28 across 8 categories
 - **Total Estimated Effort**: 130-173 weeks
 - **Timeline with 3-4 Engineers**: 10 months for high-priority work
 - **High-Risk Initiatives**: 4 (Entity Dedup, NFT work)

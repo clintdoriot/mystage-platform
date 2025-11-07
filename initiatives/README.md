@@ -53,6 +53,7 @@ When an initiative is shipped to production and closed, the entire subdirectory 
 - [Dynamic Scraping System](_planning/dynamic-scraping.md)
 - [Extraction Improvements](_planning/extraction-improvements.md)
 - [Pipeline Performance Optimization](_planning/pipeline-optimization.md)
+- [Data Retention & Archival](_planning/data-retention-archival.md)
 
 ### Admin & Internal Tools
 - [Admin Interface: Roles & Access Control](_planning/admin-roles-access.md)
@@ -85,7 +86,7 @@ When an initiative is shipped to production and closed, the entire subdirectory 
 ## Planning Documents
 
 ### [Effort Estimation](effort-estimation.md)
-Comprehensive effort estimates for all 27 initiatives including:
+Comprehensive effort estimates for all 28 initiatives including:
 - Size estimates (S/M/L/XL with week ranges)
 - Complexity and risk assessments
 - Priority rankings
