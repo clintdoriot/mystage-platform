@@ -427,8 +427,10 @@ When making changes to platform docs:
    - **Must run on main branch** (after PR merge)
    - Asks which repository to create issues in (for multi-repo initiatives)
    - **Moves files** from `_planning/` to `initiatives/[name]/` subdirectory
-   - Creates GitHub milestone and issues in chosen repository
-   - Creates `initiatives/[name]/issues.md` tracking document
+   - Generates `initiatives/[name]/issues.json` with all issues
+   - Creates tracking document `initiatives/[name]/issues-tracking.md`
+   - User runs: `python scripts/create-issues.py initiatives/[name]/issues.json`
+   - Script creates milestone + all issues + adds to project #3 in one batch
    - Uses `doc-updater` agent to update status and references
    - Uses `architecture-validator` agent to verify everything
 

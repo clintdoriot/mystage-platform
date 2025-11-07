@@ -1,4 +1,4 @@
-Create a GitHub milestone and issues for an initiative based on the implementation plan. This breaks down an initiative into trackable, assignable issues.
+Create a GitHub milestone and issues for an initiative based on the implementation plan. This generates a JSON file with all issues and a Python script to create them in batch.
 
 ## Command Usage
 ```
@@ -9,7 +9,6 @@ Create a GitHub milestone and issues for an initiative based on the implementati
 - Initiative PR has been merged to main
 - Initiative specification exists: `initiatives/_planning/[initiative-name].md`
 - Implementation plan exists: `initiatives/_planning/[initiative-name]-plan.md`
-- User confirms they want to create issues
 
 **CRITICAL**: This command must be run from the main branch after the initiative PR has been merged.
 
@@ -55,8 +54,9 @@ test -f initiatives/_planning/$ARGUMENTS-plan.md
 ```
 
 If either is missing, suggest running:
-- `/initiative-brainstorm [initiative-name]` - Create spec
-- `/initiative-plan [initiative-name]` - Create plan
+- `/initiative-brainstorm-design [initiative-name]` - Create design spec
+- `/initiative-brainstorm-technical [initiative-name]` - Add technical architecture
+- `/initiative-plan [initiative-name]` - Create implementation plan
 
 ### STEP 2: READ IMPLEMENTATION PLAN
 
@@ -64,6 +64,7 @@ Parse the plan document to extract:
 - **Initiative Overview**: Summary and scope
 - **Phases**: High-level phases (Phase 1, Phase 2, etc.)
 - **Tasks**: Individual tasks within each phase (Task 1.1, 1.2, etc.)
+- **Subtasks**: Implementation details under each task
 - **Dependencies**: Which tasks depend on others
 - **Effort Estimates**: Size and time estimates
 - **Repositories**: Which repos each task affects
@@ -99,71 +100,41 @@ Store the chosen repository for use in later steps.
 
 Before creating issues, move the initiative from planning to active:
 
-**Create subdirectory:**
 ```bash
+# Create subdirectory
 mkdir -p initiatives/$ARGUMENTS
-```
 
-**Move files:**
-```bash
-# Move spec
+# Move files
 mv initiatives/_planning/$ARGUMENTS.md initiatives/$ARGUMENTS/
-
-# Move plan
 mv initiatives/_planning/$ARGUMENTS-plan.md initiatives/$ARGUMENTS/
 
-# Create issues tracking document location
-# (will be created in STEP 8)
+echo "Moved initiative to: initiatives/$ARGUMENTS/"
 ```
 
-**Update internal references if needed** (links within docs may need updating).
+### STEP 5: GENERATE ISSUES JSON
 
-### STEP 5: CREATE MILESTONE
+Create `initiatives/$ARGUMENTS/issues.json` with all issues from the implementation plan.
 
-Ask user for milestone details:
-- **Milestone Name**: e.g., "Entity Deduplication System" or "Database Schema Tooling"
-- **Due Date**: Target completion date (optional)
-- **Description**: Brief description of what this milestone delivers
-
-Create milestone:
-```bash
-gh issue create --milestone "[milestone-name]" --title "[milestone-name]" --body "[description]"
+**JSON Structure:**
+```json
+{
+  "initiative": "[Initiative Name]",
+  "milestone": "[Initiative Name]",
+  "target_repo": "[repo-name]",
+  "project_number": 3,
+  "project_owner": "clintdoriot",
+  "issues": [
+    {
+      "title": "Phase 1.1: [Task Name]",
+      "body": "## Initiative\n[Initiative Name]\n\n## Description\n[Task description]\n\n## Deliverables\n- [ ] Item 1\n- [ ] Item 2\n\n## Effort\n- Size: [S/M/L]\n- Time: [estimate]\n\n## Related\n- Spec: `initiatives/[name]/[name].md`\n- Plan: `initiatives/[name]/[name]-plan.md`"
+    }
+  ]
+}
 ```
-
-Or if you prefer to use the milestone API:
-```bash
-gh api repos/:owner/:repo/milestones -f title="[milestone-name]" -f description="[description]" -f due_on="[date]"
-```
-
-### STEP 6: CREATE LABELS
-
-**Note**: Labels are created in the chosen target repository.
-
-
-Ensure necessary labels exist:
-```bash
-# Initiative-specific label
-gh label create "initiative:$ARGUMENTS" --description "Issues related to $ARGUMENTS initiative" --color "0366d6" || true
-
-# Standard labels (create if they don't exist)
-gh label create "documentation" --description "Documentation updates" --color "d4c5f9" || true
-gh label create "planning" --description "Planning and specification work" --color "fbca04" || true
-gh label create "architecture" --description "Architecture decisions and documentation" --color "d876e3" || true
-gh label create "high-priority" --description "High priority work" --color "d93f0b" || true
-gh label create "medium-priority" --description "Medium priority work" --color "fbca04" || true
-gh label create "low-priority" --description "Low priority work" --color "0e8a16" || true
-```
-
-### STEP 7: GENERATE ISSUES FROM PLAN
-
-**Create issues in the target repository** (determined in STEP 3).
-
-
-For each task in the implementation plan, create a GitHub issue:
 
 **Issue Title Format:**
 ```
-[Initiative Name] Phase X.Y: [Task Name]
+Phase X.Y: [Task Name]
 ```
 
 **Issue Body Template:**
@@ -182,223 +153,111 @@ Task X.Y: [Task Name]
 [Which repos or platform areas this affects]
 
 ## Deliverables
-[List of deliverables from plan]
-
-## Acceptance Criteria
-- [ ] [Criterion 1]
-- [ ] [Criterion 2]
-- [ ] [Criterion 3]
+- [ ] [Deliverable 1]
+- [ ] [Deliverable 2]
+- [ ] [Deliverable 3]
 
 ## Dependencies
-Depends on: [#issue-number] (if applicable)
-Blocks: [Will be filled in after dependent issues created]
+[List any task dependencies]
 
 ## Effort Estimate
 - **Size**: [XS/S/M/L/XL]
 - **Estimated Time**: [days/weeks]
 - **Complexity**: [Low/Medium/High]
-- **Risk**: [🟢/🟡/🔴]
 
-## Implementation Approach
-[Brief approach from plan]
+## Implementation Notes
+[Any important implementation details from plan]
 
-## Clarifications Needed
-[Questions from plan that need answers]
-
-## Documentation to Review
-[Relevant docs to read before starting]
-
----
-Part of milestone: [Milestone Name]
-Initiative spec: `initiatives/_planning/[initiative-name].md`
-Implementation plan: `initiatives/_planning/[initiative-name]-plan.md`
+## Related Documentation
+- Initiative spec: `initiatives/[name]/[name].md`
+- Implementation plan: `initiatives/[name]/[name]-plan.md`
 ```
 
-**Create each issue:**
-```bash
-# Change to target repository directory first (if not platform repo)
-cd /Users/clint/Projects/mystage/[target-repo]
+**Generate one issue per task** in the implementation plan. Parse the plan systematically:
+1. Identify all phases
+2. For each phase, identify all tasks
+3. Extract task details (description, deliverables, effort, dependencies)
+4. Generate issue JSON object
 
-gh issue create \
-  --title "[Issue Title]" \
-  --body "[Issue Body]" \
-  --milestone "[Milestone Name]" \
-  --label "initiative:$ARGUMENTS" \
-  --label "[priority-label]" \
-  --label "[type-labels]"
-```
+Save to: `initiatives/$ARGUMENTS/issues.json`
 
-**For multi-repo initiatives:**
-- Create most issues in primary repo
-- Note in tracking document which issues belong in other repos
-- User can create those issues manually or you can help create them in other repos
+### STEP 6: NO SCRIPT NEEDED
 
-### STEP 8: LINK DEPENDENCIES
+Issues will be created using the shared script at `scripts/create-issues.py`.
 
-After all issues are created:
-1. Go through created issues
-2. For each issue with dependencies, add comment:
-```bash
-gh issue comment [issue-number] --body "Depends on: #[dependency-issue-number]"
-```
-3. Update dependency issues with "Blocks: #[blocked-issue]" comments
+### STEP 7: CREATE TRACKING DOCUMENT
 
-### STEP 9: CREATE ISSUE TRACKING DOCUMENT
-
-Create a tracking document in the initiative subdirectory:
-`initiatives/[initiative-name]/issues.md`
-
-**Note**: Initiative is now in its own subdirectory since it's active.
+Create `initiatives/$ARGUMENTS/issues-tracking.md`:
 
 ```markdown
 # [Initiative Name] - Issue Tracking
 
 **Milestone**: [Milestone Name]
-**Repository**: [Target repository name]
+**Repository**: [target-repo]
 **Created**: [Date]
 **Status**: Active
 
-## Issues by Phase
+## Issues File
 
-### Phase 1: [Phase Name]
-- [ ] #X - Task 1.1: [Task Name] (Status: Open, Priority: High)
-- [ ] #Y - Task 1.2: [Task Name] (Status: Open, Priority: High)
+All issues are defined in: `issues.json`
 
-### Phase 2: [Phase Name]
-- [ ] #Z - Task 2.1: [Task Name] (Status: Open, Priority: Medium)
-
-## Dependency Graph
-
+To create the issues in GitHub:
+```bash
+python scripts/create-issues.py initiatives/[initiative-name]/issues.json
 ```
-#X → #Y → #Z
-     ↓
-    #A → #B
-```
-
-## Quick Links
-- [Milestone on GitHub]([url])
-- [Initiative Spec]([initiative-name].md)
-- [Implementation Plan]([initiative-name]-plan.md)
-
-## Notes
-- **Repository**: Most issues created in [target-repo]
-- **Multi-repo**: [If applicable, list issues that should be created in other repos]
 
 ## Progress
-- **Total Issues**: [count]
-- **Completed**: 0
-- **In Progress**: 0
-- **Blocked**: 0
-- **Open**: [count]
-```
 
-### STEP 10: SUMMARY OUTPUT
+Track milestone progress at:
+https://github.com/[target-repo]/milestone
 
-Provide summary to user:
-
-```
-INITIATIVE ISSUES CREATED: [Initiative Name]
-
-MOVED TO ACTIVE:
-- initiatives/[initiative-name]/[initiative-name].md (spec)
-- initiatives/[initiative-name]/[initiative-name]-plan.md (plan)
-- initiatives/[initiative-name]/issues.md (tracking)
-
-MILESTONE: [Milestone Name]
-- Repository: [target-repo]
-- URL: [milestone-url]
-- Due Date: [date]
-
-ISSUES CREATED:
-Phase 1: [Phase Name]
-  ✓ #X - Task 1.1: [Task Name] (Priority: High, Size: M)
-  ✓ #Y - Task 1.2: [Task Name] (Priority: High, Size: L)
-
-Phase 2: [Phase Name]
-  ✓ #Z - Task 2.1: [Task Name] (Priority: Medium, Size: M)
-
-TOTAL: [count] issues created
-
-DEPENDENCIES LINKED:
-- #Y depends on #X
-- #Z depends on #Y
-
-LABELS APPLIED:
-- initiative:[initiative-name]
-- [priority labels]
-- [type labels]
-
-TRACKING DOCUMENT: initiatives/[initiative-name]/issues.md
-
-GITHUB REPOSITORY: [target-repo-name]
-
-NEXT STEPS:
-1. Review issues for accuracy
-2. Assign initial issues to team members
-3. Start with: #X - Task 1.1 (no dependencies)
-4. Use /issue-identify to find next work
-5. Use /issue-analyze before starting each issue
-```
-
-### STEP 11: DOCUMENTATION UPDATES
-
-Use the Task tool to launch the `doc-updater` agent to automatically update:
-- Update `initiatives/README.md`:
-  - Move initiative from `_planning/` reference to active subdirectory
-  - Update status from Planning to Active
-  - Add milestone link
-- Update `initiatives/timeline.md` if dates are set
-- Ensure all cross-references point to new subdirectory location
-
-Then use the Task tool to launch the `architecture-validator` agent to verify:
-- All documentation is properly cross-referenced
-- Issue tracking document is complete
-- Initiative status is correctly updated
-- File moves were successful
-
-### STEP 12: VERIFICATION
-
-Verify all issues created correctly:
-```bash
-# Change to target repository
-cd /Users/clint/Projects/mystage/[target-repo]
-
-# List all issues in milestone
-gh issue list --milestone "[Milestone Name]"
-
-# Check labels are applied
-gh issue list --label "initiative:$ARGUMENTS"
-```
-
-Verify file moves:
-```bash
-# Verify subdirectory exists
-ls -la initiatives/[initiative-name]/
-
-# Verify files moved
-test -f initiatives/[initiative-name]/[initiative-name].md
-test -f initiatives/[initiative-name]/[initiative-name]-plan.md
-test -f initiatives/[initiative-name]/issues.md
-```
-
-## Options
-
-**Dry Run Mode:**
-Add `--dry-run` to preview issues without creating:
-```
-/initiative-create-issues [initiative-name] --dry-run
-```
-
-**Custom Milestone Name:**
-Specify milestone name explicitly:
-```
-/initiative-create-issues [initiative-name] --milestone "Custom Milestone Name"
-```
+View in project:
+https://github.com/users/clintdoriot/projects/3
 
 ## Notes
 
-- Issues are created in order (Phase 1.1, 1.2, etc.)
-- Dependencies are linked after all issues exist
-- Labels help filter and organize work
-- Tracking document makes progress visible
-- Issues can be refined after creation based on learnings
+- Issues created from implementation plan
+- All issues added to milestone: [Milestone Name]
+- All issues added to GitHub Project #3
+```
+
+### STEP 8: PROVIDE NEXT STEPS
+
+Show the user what was created and how to proceed:
+
+```
+✅ INITIATIVE SETUP COMPLETE
+
+Created files:
+- initiatives/$ARGUMENTS/$ARGUMENTS.md (moved from _planning)
+- initiatives/$ARGUMENTS/$ARGUMENTS-plan.md (moved from _planning)
+- initiatives/$ARGUMENTS/issues.json (generated)
+- initiatives/$ARGUMENTS/issues-tracking.md (tracking doc)
+
+NEXT STEPS:
+
+1. Review the issues:
+   cat initiatives/$ARGUMENTS/issues.json
+
+2. Edit if needed:
+   - Adjust issue titles
+   - Refine descriptions
+   - Add/remove issues
+
+3. Create the GitHub issues:
+   python scripts/create-issues.py initiatives/$ARGUMENTS/issues.json
+
+   This will:
+   - Ask for confirmation once
+   - Create milestone in [target-repo]
+   - Create all issues from issues.json in batch
+   - Add issues to GitHub Project #3
+
+4. Track progress:
+   - Milestone: https://github.com/[target-repo]/milestone
+   - Project: https://github.com/users/clintdoriot/projects/3
+```
+
+---
+
+**Arguments**: $ARGUMENTS
