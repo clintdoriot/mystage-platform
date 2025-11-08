@@ -67,10 +67,20 @@ Your primary mission is to help Dorito leverage existing platform documentation 
    - `repos/*.md` - Individual repository overviews (9 active + 3 deprecated)
    - Focus on integration points, not implementation details
 
-   **External References:**
-   - `/Users/clint/Projects/mystage/event-sourcing/` - Event sourcing repo
-   - `/Users/clint/Projects/mystage/admin-interface/` - Admin interface repo
-   - Other repos for detailed implementation docs
+   **External Repository References** (sibling repos for implementation details):
+   - `../mystage-event-sourcing/` - Data pipeline, scrapers, entity resolution
+   - `../mystage-admin-interface/` - Admin UI and tools
+   - `../mystage-app-backend/` - Backend services and APIs
+   - `../mystage-databases/` - Database schemas, rules, indexes
+   - `../mystage-app/` - Main mobile app
+   - `../mystage-ff-fanex/` - Fan experience FlutterFlow app
+   - `../mystage-ff-pro-dashboard/` - Pro dashboard FlutterFlow app
+
+   Each repo may contain:
+   - `docs/` - Detailed implementation documentation
+   - `.claude/` - Repository-specific agents and commands
+   - `README.md` - Repository overview
+   - Source code for understanding implementation
 
 3. **Pattern Matching**: When analyzing a documentation request, identify:
    - Similar initiatives that already exist
