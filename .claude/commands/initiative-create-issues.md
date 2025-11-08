@@ -69,12 +69,13 @@ Parse the plan document to extract:
 - **Effort Estimates**: Size and time estimates
 - **Repositories**: Which repos each task affects
 
-### STEP 3: PARSE REPOSITORY ASSIGNMENTS
+### STEP 3: PARSE REPOSITORY AND TEAM ASSIGNMENTS
 
-Parse the implementation plan to extract the **Primary Repository** for each task:
+Parse the implementation plan to extract the **Primary Repository** and **Team** for each task:
 - Look for the "REPOSITORY/LOCATION" section in each task
 - Extract the "Primary Repository" field
-- Build a mapping of task → repository
+- Extract the "Team" field (Backend, Frontend, or Admin)
+- Build a mapping of task → repository + team
 - Identify all unique repositories that will have issues created
 
 **Repository Name Normalization:**
@@ -88,7 +89,8 @@ Map common variations to full GitHub repo names:
 
 **Validation:**
 - Each task MUST have a Primary Repository specified
-- If any task is missing a repository, stop and report the error
+- Each task MUST have a Team specified (Backend, Frontend, or Admin)
+- If any task is missing repository or team, stop and report the error
 - Suggest re-running `/initiative-plan` to fix the issue
 
 **Summary:**
@@ -96,13 +98,19 @@ After parsing, show the user a summary:
 ```
 Initiative: [Name]
 Total Tasks: [N]
+
 Repositories Affected:
 - clintdoriot/mystage-event-sourcing: [N] issues
 - clintdoriot/mystage-admin-interface: [N] issues
 - clintdoriot/mystage-platform: [N] issues
 
-Common Project: #3 (@clintdoriot)
-Milestone: "[Initiative Name]" (will be created in each repository)
+Teams:
+- Backend: [N] issues
+- Frontend: [N] issues
+- Admin: [N] issues
+
+Project: #3 (@clintdoriot)
+All issues will be added to Project #3 with Initiative custom field set
 ```
 
 ### STEP 4: MOVE TO ACTIVE SUBDIRECTORY
@@ -128,17 +136,22 @@ Create `initiatives/$ARGUMENTS/issues.json` with all issues from the implementat
 ```json
 {
   "initiative": "[Initiative Name]",
-  "milestone": "[Initiative Name]",
   "project_number": 3,
   "project_owner": "clintdoriot",
   "issues": [
     {
       "repository": "clintdoriot/mystage-event-sourcing",
+      "team": "Backend",
+      "priority": "P1 - High",
+      "size": "M",
       "title": "Phase 1.1: [Task Name]",
-      "body": "## Initiative\n[Initiative Name]\n\n## Description\n[Task description]\n\n## Deliverables\n- [ ] Item 1\n- [ ] Item 2\n\n## Effort\n- Size: [S/M/L]\n- Time: [estimate]\n\n## Related\n- Spec: `initiatives/[name]/[name].md`\n- Plan: `initiatives/[name]/[name]-plan.md`"
+      "body": "## Initiative\n[Initiative Name]\n\n## Description\n[Task description]\n\n## Deliverables\n- [ ] Item 1\n- [ ] Item 2\n\n## Effort\n- Size: M\n- Time: [estimate]\n\n## Related\n- Spec: `initiatives/[name]/[name].md`\n- Plan: `initiatives/[name]/[name]-plan.md`"
     },
     {
       "repository": "clintdoriot/mystage-admin-interface",
+      "team": "Admin",
+      "priority": "P2 - Medium",
+      "size": "S",
       "title": "Phase 1.2: [Task Name]",
       "body": "..."
     }
@@ -146,10 +159,14 @@ Create `initiatives/$ARGUMENTS/issues.json` with all issues from the implementat
 }
 ```
 
-**Key Changes from Previous Format:**
-- Removed `target_repo` (was single repo for all issues)
-- Added `repository` field to each individual issue
-- Each issue specifies which repo it belongs to
+**Key Fields:**
+- `initiative`: Initiative name (will be set as custom field "Initiative" in Project #3)
+- `repository`: Which repo each issue belongs to
+- `team`: Backend, Frontend, or Admin (will be set as custom field "Team" in Project #3)
+- `priority`: Optional - P0-Critical, P1-High, P2-Medium, P3-Low (will be set as custom field "Priority")
+- `size`: Optional - XS, S, M, L, XL (will be set as custom field "Size")
+
+**Note**: The script will automatically create the issue option for Initiative if it doesn't exist in Project #3. For Priority and Size, they're optional and can be set later manually if not included in the JSON.
 
 **Issue Title Format:**
 ```
@@ -195,14 +212,23 @@ Task X.Y: [Task Name]
 **Generate one issue per task** in the implementation plan. Parse the plan systematically:
 1. Identify all phases
 2. For each phase, identify all tasks
-3. Extract task details (description, deliverables, effort, dependencies)
-4. Generate issue JSON object
+3. Extract task details (description, deliverables, effort, dependencies, repository, team)
+4. Generate issue JSON object with repository and team fields
 
 Save to: `initiatives/$ARGUMENTS/issues.json`
 
 ### STEP 6: NO SCRIPT NEEDED
 
 Issues will be created using the shared script at `scripts/create-issues.py`.
+
+**NOTE**: The script currently creates issues and adds them to Project #3, but **does not** automatically set custom fields (Initiative, Team, Priority, Size).
+
+**Custom fields must be:**
+1. Configured in Project #3 settings first (Initiative, Team, Priority, Size)
+2. Set manually in the Project after issue creation, OR
+3. Set via GitHub API (future enhancement to automate this)
+
+The `initiative` and `team` values from issues.json can be used to bulk-set custom fields via API or manually.
 
 ### STEP 7: CREATE TRACKING DOCUMENT
 

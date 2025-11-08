@@ -104,6 +104,8 @@ Create a detailed description for each task using this template:
 ### REPOSITORY/LOCATION
 **Primary Repository**: [Single repo where issue will be created: mystage-event-sourcing, mystage-admin-interface, mystage-databases, mystage-app-backend, mystage-platform, etc.]
 
+**Team**: [Which team owns this work: Backend, Frontend, or Admin - based on what the task does, not just the repo]
+
 **Also Affects**: [Optional: Other repos that will be impacted but won't have issues created]
 
 ### EXPECTED OUTPUTS
