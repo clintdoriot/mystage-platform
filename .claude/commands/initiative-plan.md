@@ -102,7 +102,11 @@ Create a detailed description for each task using this template:
 [Clear description of what will be accomplished in this task]
 
 ### REPOSITORY/LOCATION
-[Which repo(s) this affects, or if it's platform-level documentation]
+**Primary Repository**: [Single repo where issue will be created: mystage-event-sourcing, mystage-admin-interface, mystage-databases, mystage-app-backend, mystage-platform, etc.]
+
+**Team**: [Which team owns this work: Backend, Frontend, or Admin - based on what the task does, not just the repo]
+
+**Also Affects**: [Optional: Other repos that will be impacted but won't have issues created]
 
 ### EXPECTED OUTPUTS
 **Deliverables:**

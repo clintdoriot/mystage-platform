@@ -286,8 +286,11 @@ Initiatives move through three stages:
 
 2. **Active** (own subdirectory) - Contains specs, progress tracking, related docs
    - `/initiative-create-issues` moves files to `initiatives/[name]/` subdirectory
-   - Creates `initiatives/[name]/issues.md` tracking document
-   - Issues created in appropriate GitHub repository
+   - Creates `initiatives/[name]/issues.json` with issue definitions
+   - Creates `initiatives/[name]/issues-tracking.md` tracking document
+   - Milestone created in each affected repository
+   - Issues created in their designated repositories
+   - All issues added to common GitHub Project #3
    - Initiative marked as "Active"
 
 3. **Complete** (`_complete/`) - Shipped to production, moved for historical reference
@@ -414,6 +417,7 @@ When making changes to platform docs:
    - Works within existing initiative branch
    - Uses `docs-finder` agent to discover related documentation
    - Saves to `initiatives/_planning/[name]-plan.md`
+   - **Each task specifies Primary Repository** for issue creation
    - Uses `doc-updater` agent to update effort estimates and timeline
    - Uses `architecture-validator` agent to validate completeness
    - Updates PR with implementation plan
@@ -425,12 +429,14 @@ When making changes to platform docs:
 
 5. **Issue Creation** - `/initiative-create-issues [initiative-name]`
    - **Must run on main branch** (after PR merge)
-   - Asks which repository to create issues in (for multi-repo initiatives)
+   - Parses Primary Repository from each task in the plan
    - **Moves files** from `_planning/` to `initiatives/[name]/` subdirectory
-   - Generates `initiatives/[name]/issues.json` with all issues
+   - Generates `initiatives/[name]/issues.json` with repository per issue
    - Creates tracking document `initiatives/[name]/issues-tracking.md`
    - User runs: `python scripts/create-issues.py initiatives/[name]/issues.json`
-   - Script creates milestone + all issues + adds to project #3 in one batch
+   - Script creates milestone in each affected repository
+   - Script creates each issue in its designated repository
+   - Script adds all issues to common GitHub Project #3
    - Uses `doc-updater` agent to update status and references
    - Uses `architecture-validator` agent to verify everything
 
