@@ -84,16 +84,23 @@ Profile Onboarding (verified creators)
 
 ### Notification System
 
+**Status**: 🟡 Planning - Design phase complete (2025-11-08)
+
 **Depends on**:
-- Firestore schema definition
-- Backend infrastructure
-- Integration points in all apps
+- Firestore schema definition (notification storage, preferences, delivery status)
+- Firebase Cloud Messaging (push notification delivery)
+- Existing social features (followers, posts, comments, likes)
+- mystage-app (Phase 1), mystage-admin-interface (Phase 2)
 
 **Blocks** (or makes better):
-- Chat integration (chat notifications)
+- Chat integration (soft dependency - chat benefits from notifications)
 - Profile claim management (approval notifications)
 - Admin content moderation (moderation notifications)
 - Any user-facing feature that needs notifications
+
+**Related**:
+- Event Sourcing: Will eventually integrate for data-driven notifications (Phase 2+)
+- Social features: Notification triggers for engagement (follows, likes, comments, DMs)
 
 ### Chat Integration
 
