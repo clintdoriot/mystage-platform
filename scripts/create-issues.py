@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
 """
-Create GitHub issues from issues.json file.
+Create GitHub issues from issues.json file across multiple repositories.
 
 Usage:
     python scripts/create-issues.py initiatives/[initiative-name]/issues.json
 
 This script will:
-1. Create a milestone in the target repository (if it doesn't exist)
-2. Create all issues from the JSON file with the milestone assigned
-3. Add each issue to GitHub Project #3
+1. Create the milestone in each affected repository (if it doesn't exist)
+2. Create each issue in its designated repository with the milestone assigned
+3. Add each issue to the common GitHub Project (default: #3)
 4. Print a summary of created issues
 
 The script runs with a single confirmation at the start, then creates all issues
 in batch without prompting for each one.
+
+Multi-repo support:
+- Each issue specifies which repository it belongs to
+- The same milestone name is created in all affected repositories
+- All issues are added to a single GitHub Project for unified tracking
 """
 
 import json
@@ -98,7 +103,7 @@ def main():
         sys.exit(1)
 
     # Validate required fields
-    required_fields = ["initiative", "milestone", "target_repo", "project_number", "project_owner", "issues"]
+    required_fields = ["initiative", "milestone", "project_number", "project_owner", "issues"]
     for field in required_fields:
         if field not in data:
             print(f"❌ Error: Missing required field '{field}' in JSON")
@@ -106,20 +111,35 @@ def main():
 
     initiative = data["initiative"]
     milestone = data["milestone"]
-    repo = data["target_repo"]
     project_number = data["project_number"]
     project_owner = data["project_owner"]
     issues = data["issues"]
+
+    # Validate each issue has a repository field
+    for i, issue in enumerate(issues, 1):
+        if "repository" not in issue:
+            print(f"❌ Error: Issue {i} missing 'repository' field")
+            sys.exit(1)
+
+    # Get list of unique repositories
+    repositories = sorted(set(issue["repository"] for issue in issues))
+
+    # Count issues per repository
+    repo_counts = {}
+    for repo in repositories:
+        repo_counts[repo] = sum(1 for issue in issues if issue["repository"] == repo)
 
     # Print summary
     print(f"\n{'='*70}")
     print(f"🚀 Creating GitHub Issues")
     print(f"{'='*70}")
-    print(f"Initiative:     {initiative}")
-    print(f"Repository:     {repo}")
-    print(f"Milestone:      {milestone}")
-    print(f"Project:        #{project_number} (@{project_owner})")
-    print(f"Issues to create: {len(issues)}")
+    print(f"Initiative:       {initiative}")
+    print(f"Milestone:        {milestone}")
+    print(f"Project:          #{project_number} (@{project_owner})")
+    print(f"Total Issues:     {len(issues)}")
+    print(f"\nRepositories:")
+    for repo in repositories:
+        print(f"  • {repo}: {repo_counts[repo]} issue(s)")
     print(f"{'='*70}\n")
 
     # Confirmation
@@ -130,17 +150,22 @@ def main():
 
     print()
 
-    # Create milestone if doesn't exist
-    if not milestone_exists(repo, milestone):
-        create_milestone(repo, milestone, f"Issues for {initiative} initiative")
-    else:
-        print(f"✅ Milestone '{milestone}' already exists\n")
+    # Create milestones in each repository (if they don't exist)
+    print(f"📌 Setting up milestones...\n")
+    for repo in repositories:
+        if not milestone_exists(repo, milestone):
+            create_milestone(repo, milestone, f"Issues for {initiative} initiative")
+        else:
+            print(f"✅ Milestone '{milestone}' already exists in {repo}\n")
 
     # Create issues
     created_issues = []
     failed_issues = []
 
+    print(f"📝 Creating issues...\n")
+
     for i, issue in enumerate(issues, 1):
+        repo = issue.get("repository", "")
         title = issue.get("title", "")
         body = issue.get("body", "")
 
@@ -148,7 +173,13 @@ def main():
             print(f"⚠️  Skipping issue {i}: Missing title")
             continue
 
-        print(f"[{i}/{len(issues)}] Creating: {title}")
+        if not repo:
+            print(f"⚠️  Skipping issue {i}: Missing repository")
+            failed_issues.append(title)
+            continue
+
+        print(f"[{i}/{len(issues)}] {repo}")
+        print(f"  Creating: {title}")
 
         try:
             # Create issue
@@ -161,13 +192,14 @@ def main():
             print(f"  ✅ Added to project\n")
 
             created_issues.append({
+                "repository": repo,
                 "title": title,
                 "url": issue_url
             })
 
         except Exception as e:
             print(f"  ❌ Failed: {str(e)}\n")
-            failed_issues.append(title)
+            failed_issues.append(f"{title} ({repo})")
 
     # Print final summary
     print(f"\n{'='*70}")
@@ -181,7 +213,7 @@ def main():
     if created_issues:
         print("Created issues:")
         for issue in created_issues:
-            print(f"  • {issue['title']}")
+            print(f"  • [{issue['repository'].split('/')[-1]}] {issue['title']}")
             print(f"    {issue['url']}")
         print()
 
@@ -191,8 +223,10 @@ def main():
             print(f"  • {title}")
         print()
 
-    print(f"📍 View milestone: https://github.com/{repo}/milestone")
-    print(f"📋 View project: https://github.com/users/{project_owner}/projects/{project_number}\n")
+    print(f"📍 View milestones:")
+    for repo in repositories:
+        print(f"  • {repo}: https://github.com/{repo}/milestone")
+    print(f"\n📋 View all issues in project: https://github.com/users/{project_owner}/projects/{project_number}\n")
 
     if failed_issues:
         sys.exit(1)

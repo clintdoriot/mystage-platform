@@ -69,32 +69,41 @@ Parse the plan document to extract:
 - **Effort Estimates**: Size and time estimates
 - **Repositories**: Which repos each task affects
 
-### STEP 3: DETERMINE TARGET REPOSITORY
+### STEP 3: PARSE REPOSITORY ASSIGNMENTS
 
-**For single-repo initiatives:**
-- Issues go in the affected repository
+Parse the implementation plan to extract the **Primary Repository** for each task:
+- Look for the "REPOSITORY/LOCATION" section in each task
+- Extract the "Primary Repository" field
+- Build a mapping of task → repository
+- Identify all unique repositories that will have issues created
 
-**For multi-repo initiatives:**
-Ask the user to choose the **primary repository** where most issues should be created:
-- List affected repositories from the initiative spec
-- Recommend the repository where most implementation work will happen
-- Explain that some issues may need to be created in other repos manually
+**Repository Name Normalization:**
+Map common variations to full GitHub repo names:
+- "event-sourcing" → "clintdoriot/mystage-event-sourcing"
+- "admin-interface" → "clintdoriot/mystage-admin-interface"
+- "databases" → "clintdoriot/mystage-databases"
+- "app-backend" → "clintdoriot/mystage-app-backend"
+- "platform" → "clintdoriot/mystage-platform"
+- etc.
 
-**Example prompt:**
+**Validation:**
+- Each task MUST have a Primary Repository specified
+- If any task is missing a repository, stop and report the error
+- Suggest re-running `/initiative-plan` to fix the issue
+
+**Summary:**
+After parsing, show the user a summary:
 ```
-This initiative affects multiple repositories:
-- mystage-event-sourcing (primary - deduplication logic)
-- mystage-admin-interface (secondary - review UI)
+Initiative: [Name]
+Total Tasks: [N]
+Repositories Affected:
+- clintdoriot/mystage-event-sourcing: [N] issues
+- clintdoriot/mystage-admin-interface: [N] issues
+- clintdoriot/mystage-platform: [N] issues
 
-I recommend creating issues in: mystage-event-sourcing
-
-Where would you like to create the GitHub milestone and issues?
-1. mystage-event-sourcing (recommended)
-2. mystage-admin-interface
-3. mystage-platform (for cross-cutting planning work)
+Common Project: #3 (@clintdoriot)
+Milestone: "[Initiative Name]" (will be created in each repository)
 ```
-
-Store the chosen repository for use in later steps.
 
 ### STEP 4: MOVE TO ACTIVE SUBDIRECTORY
 
@@ -120,17 +129,27 @@ Create `initiatives/$ARGUMENTS/issues.json` with all issues from the implementat
 {
   "initiative": "[Initiative Name]",
   "milestone": "[Initiative Name]",
-  "target_repo": "[repo-name]",
   "project_number": 3,
   "project_owner": "clintdoriot",
   "issues": [
     {
+      "repository": "clintdoriot/mystage-event-sourcing",
       "title": "Phase 1.1: [Task Name]",
       "body": "## Initiative\n[Initiative Name]\n\n## Description\n[Task description]\n\n## Deliverables\n- [ ] Item 1\n- [ ] Item 2\n\n## Effort\n- Size: [S/M/L]\n- Time: [estimate]\n\n## Related\n- Spec: `initiatives/[name]/[name].md`\n- Plan: `initiatives/[name]/[name]-plan.md`"
+    },
+    {
+      "repository": "clintdoriot/mystage-admin-interface",
+      "title": "Phase 1.2: [Task Name]",
+      "body": "..."
     }
   ]
 }
 ```
+
+**Key Changes from Previous Format:**
+- Removed `target_repo` (was single repo for all issues)
+- Added `repository` field to each individual issue
+- Each issue specifies which repo it belongs to
 
 **Issue Title Format:**
 ```
@@ -193,7 +212,7 @@ Create `initiatives/$ARGUMENTS/issues-tracking.md`:
 # [Initiative Name] - Issue Tracking
 
 **Milestone**: [Milestone Name]
-**Repository**: [target-repo]
+**Repositories**: [List of all repos with issues]
 **Created**: [Date]
 **Status**: Active
 
@@ -206,12 +225,18 @@ To create the issues in GitHub:
 python scripts/create-issues.py initiatives/[initiative-name]/issues.json
 ```
 
+This will:
+- Create milestone "[Milestone Name]" in each affected repository
+- Create issues in their designated repositories
+- Add all issues to GitHub Project #3
+
 ## Progress
 
-Track milestone progress at:
-https://github.com/[target-repo]/milestone
+Track milestones:
+- [repo-1]: https://github.com/[repo-1]/milestone
+- [repo-2]: https://github.com/[repo-2]/milestone
 
-View in project:
+View all issues in project:
 https://github.com/users/clintdoriot/projects/3
 
 ## Notes
@@ -249,13 +274,13 @@ NEXT STEPS:
 
    This will:
    - Ask for confirmation once
-   - Create milestone in [target-repo]
-   - Create all issues from issues.json in batch
-   - Add issues to GitHub Project #3
+   - Create milestone "[Initiative Name]" in each affected repository
+   - Create all issues in their designated repositories
+   - Add all issues to GitHub Project #3
 
 4. Track progress:
-   - Milestone: https://github.com/[target-repo]/milestone
-   - Project: https://github.com/users/clintdoriot/projects/3
+   - View all issues in Project: https://github.com/users/clintdoriot/projects/3
+   - View milestones in each repository
 ```
 
 ---
