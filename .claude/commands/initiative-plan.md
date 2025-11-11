@@ -101,12 +101,19 @@ Create a detailed description for each task using this template:
 ### SCOPE OF WORK
 [Clear description of what will be accomplished in this task]
 
-### REPOSITORY/LOCATION
-**Primary Repository**: [Single repo where issue will be created: mystage-event-sourcing, mystage-admin-interface, mystage-databases, mystage-app-backend, mystage-platform, etc.]
+### PROJECT/REPOSITORY
+**Primary Project**: [Which Asana project/team owns this work:
+  - "-MS D Data Pipeline" (backend team - for backend/database work)
+  - "-MS D 1.3 Sprint" (mobile/frontend team - for mobile app work)
+  - "-MS D Pro Dashboard" (frontend team - for pro dashboard work)
+  - "-MS D Fan Experience App" (frontend team - for fan experience work)
+  - "-MS D Admin Portal" (admin team - for admin portal work)]
 
-**Team**: [Which team owns this work: Backend, Frontend, or Admin - based on what the task does, not just the repo]
+**Repository**: [Which repos will be modified: mystage-event-sourcing, mystage-admin-interface, mystage-databases, mystage-app-backend, mystage-ff-app, mystage-ff-pro, mystage-ff-fanex]
 
-**Also Affects**: [Optional: Other repos that will be impacted but won't have issues created]
+**Priority**: [High/Medium/Low - for Asana custom field]
+
+**Estimated Hours**: [Number - for Asana custom field]
 
 ### EXPECTED OUTPUTS
 **Deliverables:**
