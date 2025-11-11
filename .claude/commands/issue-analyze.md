@@ -1,64 +1,110 @@
-Analyze a GitHub issue in detail to understand requirements, dependencies, and clarify any ambiguities before starting work.
+Analyze an Asana task in detail to understand requirements, dependencies, and clarify any ambiguities before starting work.
 
 ## Command Usage
 ```
-/issue-analyze [issue-number]
+/issue-analyze [task-gid]
 ```
 
-If no issue number is provided, will analyze the most recently identified issue from `/issue-identify`.
+If no task GID is provided, will analyze the most recently identified task from `/issue-identify`.
 
 ## Analysis Process
 
-### 1. Fetch Issue Details
-```bash
-gh issue view [issue-number] --json title,body,labels,assignees,milestone,state,url,comments
+### 1. Fetch Task Details
+
+Use Asana MCP integration to get full task details:
+```
+mcp__asana__asana_get_task:
+- task_id: [task-gid]
+- opt_fields: "name,notes,tags.name,custom_fields,projects.name,memberships.section.name,due_on,assignee.name,followers.name,dependencies,dependents"
 ```
 
 Extract key information:
-- **Title and Description**: What needs to be done
-- **Initiative**: Which initiative this belongs to
-- **Phase/Task ID**: Where in the implementation plan
-- **Repository**: Which repos are affected
-- **Dependencies**: What must be complete first
-- **Blocks**: What this unblocks
-- **Labels**: Priority, type, status
-- **Comments**: Additional context or clarifications
+- **Name**: Task title (often includes Phase X.Y prefix)
+- **Description (notes)**: Full task details
+- **Project**: Which Asana project/team owns this
+- **Section**: Current workflow status (Backlog/Ready/In Progress/etc.)
+- **Tags**: Initiative and repository tags
+- **Custom Fields**: Priority, Est. Hours, % Complete
+- **Due Date**: If set
+- **Assignee**: Who owns this task
+- **Dependencies**: What must be complete first (if supported by Asana)
+- **Dependents**: What this unblocks (if supported by Asana)
 
-### 2. Review Related Documentation
+### 2. Parse Task Description
+
+The task description should follow this format (from `/initiative-create-issues`):
+```markdown
+## Initiative
+[Initiative Name] - [Brief description]
+
+## Phase/Task
+Phase X: [Phase Name]
+Task X.Y: [Task Name]
+
+## Description
+[Task description]
+
+## Deliverables
+- [ ] [Deliverable 1]
+- [ ] [Deliverable 2]
+
+## Dependencies
+[List any task dependencies]
+
+## Effort Estimate
+- **Priority**: [High/Medium/Low]
+- **Estimated Hours**: [hours]
+- **Complexity**: [Low/Medium/High]
+
+## Implementation Notes
+[Important implementation details]
+
+## Related Documentation
+- Initiative spec: `initiatives/[name]/[name].md`
+- Implementation plan: `initiatives/[name]/[name]-plan.md`
+```
+
+Parse each section to extract structured information.
+
+### 3. Review Related Documentation
 
 Before analyzing, read relevant platform documentation:
 
-**For initiative-related issues:**
-- `initiatives/_planning/[initiative-name].md` - Initiative specification
-- `initiatives/_planning/[initiative-name]-plan.md` - Implementation plan (if exists)
-- `initiatives/effort-estimation.md` - Sizing framework
-- `architecture/dependencies.md` - Cross-initiative dependencies
+**Extract initiative name from tags or description, then read:**
+- `initiatives/[initiative-name]/[initiative-name].md` - Initiative specification
+- `initiatives/[initiative-name]/[initiative-name]-plan.md` - Full implementation plan
+- `initiatives/[initiative-name]/tasks-tracking.md` - Task tracking document
 
-**For repository documentation issues:**
-- `repos/[repo-name].md` - Current repo documentation
+**For repository-specific work:**
+- `repos/[repo-name].md` - Current repo documentation (extract repo from tags)
 - `architecture/system-overview.md` - Integration patterns
-- `architecture/data-flow.md` - Data movement
+- `architecture/data-flow.md` - Data movement between systems
 
-**For architecture issues:**
+**For architecture work:**
 - `architecture/README.md` - Documentation boundaries
 - `architecture/system-overview.md` - Current architecture
 - Related repo docs for affected systems
 
-### 3. Dependency Analysis
+### 4. Dependency Analysis
 
-**Check dependencies:**
-1. Read `Depends on: #X` from issue body
-2. For each dependency, check if it's closed: `gh issue view #X --json state`
-3. If any are open, list them and suggest working on dependencies first
-4. Check if this issue blocks others (priority indicator)
+**Check explicit dependencies:**
+1. Look for "Dependencies" section in task description
+2. Parse task references (Phase X.Y format or Asana task links)
+3. For each dependency, check if it's in "Done" section
+4. Flag any blocking dependencies that aren't complete
 
 **Identify implicit dependencies:**
-- Does this require architecture decisions?
-- Are there related initiatives that should coordinate?
-- Does documentation exist for prerequisites?
-- Are there external factors (decisions, approvals)?
+- Does this require architecture decisions not yet made?
+- Are there related tasks in other projects that should coordinate?
+- Does prerequisite documentation exist?
+- Are there external factors (stakeholder decisions, approvals)?
 
-### 4. Scope Clarification
+**Check what this unblocks:**
+- Look at related tasks in the same initiative (same initiative tag)
+- Find tasks with higher phase/task numbers
+- Prioritize if this task is blocking other work
+
+### 5. Scope Clarification
 
 **Deliverables Analysis:**
 - What files/documents will be created or modified?
@@ -72,68 +118,81 @@ Before analyzing, read relevant platform documentation:
 - Are integration vs implementation concerns clear?
 - Is the scope well-defined and focused?
 
-### 5. Requirements Clarification
+### 6. Requirements Clarification
 
 **Ask clarifying questions if needed:**
 
-**For planning/spec issues:**
+**For planning/spec tasks:**
 - What business problem does this solve?
 - What are the success criteria?
 - Who are the stakeholders to consult?
 - What's the priority relative to other work?
 - What decisions must be made?
 
-**For documentation issues:**
+**For documentation tasks:**
 - What's the target audience?
 - What level of detail is appropriate?
 - What related docs need updating?
 - Are there examples or diagrams needed?
 
-**For architecture issues:**
-- Which systems/repos are affected?
-- What integration patterns are involved?
+**For implementation tasks:**
+- Which repositories will be modified?
+- What integration points are affected?
 - What are the constraints or requirements?
 - Are there alternative approaches to consider?
 
-### 6. Effort Validation
+### 7. Effort Validation
 
-Compare issue scope to effort framework:
-- Does the described work match the size estimate?
-- Are there hidden complexities?
-- Should this be broken into smaller issues?
-- Is the timeline realistic?
+Compare task details to effort estimate:
+- Does the described work match the estimated hours?
+- Are there hidden complexities not accounted for?
+- Should this be broken into smaller tasks?
+- Is the timeline realistic given dependencies?
 
-### 7. Risk Assessment
+### 8. Risk Assessment
 
 Identify risks and challenges:
 - **Dependency risks**: Other work blocking this
 - **Decision risks**: Unclear requirements or priorities
-- **Coordination risks**: Multiple stakeholders or repos
+- **Coordination risks**: Multiple stakeholders, projects, or repos
 - **Technical risks**: Architectural uncertainties
 - **Timeline risks**: External dependencies or approvals
 
-### 8. Output Format
+### 9. Output Format
 
 ```
-ISSUE ANALYSIS: #[number] - [title]
+TASK ANALYSIS: [Task Name]
 
 ## Summary
-[Brief description of what this issue accomplishes]
+[Brief description of what this task accomplishes]
+
+## Task Details
+- **Asana GID**: [gid]
+- **Project**: -MS D [Project Name]
+- **Section**: [Backlog/Ready/In Progress/etc.]
+- **Initiative**: #[initiative-name]
+- **Repository Tags**: #[repo1], #[repo2]
+- **Priority**: [High/Medium/Low]
+- **Estimated Hours**: [number]
+- **Due Date**: [date or "Not set"]
+- **Assignee**: [name]
+- **View in Asana**: [url]
 
 ## Initiative Context
 - Initiative: [initiative name]
 - Phase/Task: [Phase X.Y]
-- Priority: [High/Medium/Low]
-- Repository: [affected repos]
+- Related Tasks: [count] tasks in this initiative
+- Completion: [X/Y tasks complete]
 
 ## Dependencies
-### Blocking This Issue:
-- [ ] #X - [title] (Status: [open/closed])
+
+### Blocking This Task:
+- [ ] Phase X.Y: [title] (Status: [section])
 - [ ] [Decision/approval needed]
 
-### This Issue Blocks:
-- #Y - [title]
-- #Z - [title]
+### This Task Blocks:
+- Phase X.Y: [title]
+- Phase X.Z: [title]
 
 ### Implicit Dependencies:
 - [Architecture decision needed]
@@ -165,7 +224,7 @@ ISSUE ANALYSIS: #[number] - [title]
 
 ## Acceptance Criteria
 
-From issue:
+From task description:
 - [ ] [Criterion 1]
 - [ ] [Criterion 2]
 
@@ -173,13 +232,13 @@ Additional verification:
 - [ ] Related docs updated
 - [ ] Cross-references working
 - [ ] Documentation boundaries respected
+- [ ] Task moved to "Done" section
 
 ## Effort Assessment
 
-**Estimated Size**: [XS/S/M/L/XL]
-**Estimated Time**: [hours/days]
-**Complexity**: [Low/Medium/High]
-**Risk**: [🟢 Low / 🟡 Medium / 🔴 High]
+**Estimated Hours**: [from custom field]
+**Priority**: [from custom field]
+**Complexity**: [from task description]
 
 **Effort Notes:**
 - [Factor affecting effort]
@@ -212,31 +271,45 @@ Additional verification:
 ## Ready to Start?
 
 **Prerequisites Complete:**
-- [✓/✗] All dependencies closed
+- [✓/✗] All dependencies in "Done" section
 - [✓/✗] Requirements clear
 - [✓/✗] Scope well-defined
 - [✓/✗] No major blockers
+- [✓/✗] Task in "Ready" or "In Progress" section
 
-**Recommendation:**
-[Start immediately / Address clarifications first / Wait for dependencies]
+**Current Status:**
+- Section: [current section]
+- [Recommendation: Start immediately / Move to Ready first / Address clarifications / Wait for dependencies]
 
 ## Next Steps
 
-[Clear actionable next steps to begin work on this issue]
+**To begin work:**
+1. [If not already] Move task to "In Progress" section in Asana
+2. [First concrete action to take]
+3. [Second action]
+
+**When complete:**
+1. Verify all acceptance criteria met
+2. Update related documentation
+3. Move task to "In Review" section
+4. Request review from [stakeholder]
+5. After approval, move to "Done"
 ```
 
-### 9. Interactive Clarification
+### 10. Interactive Clarification
 
 If requirements are unclear:
 1. Identify specific ambiguities
 2. Ask targeted questions (one at a time if needed)
 3. Document answers for reference
-4. Update issue with clarifications if helpful
+4. Offer to update task description in Asana with clarifications
 
-### 10. Follow-Up Actions
+### 11. Follow-Up Actions
 
 After analysis, offer to:
-- Start working on the issue if ready
-- Update issue with clarifications
-- Create dependency issues if needed
+- Start working on the task if ready
+- Move task to "Ready" section if dependencies are met
+- Update task description with clarifications
+- Identify and create dependency tasks if needed
 - Suggest alternative sequencing if better approach exists
+- Review related documentation before starting

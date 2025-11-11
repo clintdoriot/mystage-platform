@@ -1,100 +1,162 @@
-Identify the next GitHub issue to work on for the MyStage platform documentation and planning. Can filter by initiative, milestone, or work with all open issues.
+Identify the next Asana task to work on for the MyStage platform. Can filter by initiative tag, project, or work with all open tasks.
 
 ## Command Usage
 ```
-/issue-identify [initiative-name|milestone-name|label]
+/issue-identify [initiative-name|project-name]
 ```
 Where the argument can be:
-- An initiative name (e.g., `entity-deduplication`, `database-schema`) - will search by `initiative:[name]` label
-- A milestone name (e.g., `Q1 Foundation`, `Phase 1: Foundation`) - will search by milestone
-- Any other label (e.g., `documentation`, `planning`, `architecture`, `high-priority`)
-- Empty to show all open issues
+- An initiative name (e.g., `notification-system`, `entity-deduplication`) - will search by `#initiative-name` tag
+- A project name (e.g., `Admin Portal`, `Data Pipeline`) - will search in that project
+- Empty to show all incomplete tasks assigned to you
 
 ## Steps
 
-**STEP 1: DETERMINE FILTER TYPE**
-- If argument contains spaces or version numbers, treat as milestone name
-- If argument starts with known prefixes or common labels, use as direct label
-- If argument looks like an initiative name (hyphenated), construct label: `initiative:[argument]`
-- If no argument provided, show all open issues
+### STEP 1: DETERMINE FILTER TYPE
 
-**STEP 2: FETCH ISSUES**
-List open GitHub issues with the appropriate filter:
-```bash
-# For initiative label:
-gh issue list --state open --label "initiative:[initiative-name]" --limit 20
+Analyze the argument to determine how to search:
+- If argument contains hyphens (e.g., "notification-system"), treat as initiative tag: `#[argument]`
+- If argument matches a project name (e.g., "Admin Portal"), search that specific project
+- If no argument provided, show all your incomplete tasks across all projects
 
-# For milestone:
-gh issue list --state open --milestone "[milestone-name]" --limit 20
+### STEP 2: FETCH ASANA TASKS
 
-# For all issues:
-gh issue list --state open --limit 20
+Use the Asana MCP integration to fetch tasks:
+
+**For initiative tag search:**
+```
+Use mcp__asana__asana_search_tasks:
+- workspace: 426521350405896
+- assignee_any: "me"
+- completed: false
+- text: "#[initiative-name]"
+- opt_fields: "name,due_on,projects.name,tags.name,custom_fields,memberships.section.name"
 ```
 
-**STEP 3: ANALYZE ISSUE DEPENDENCIES**
-For each issue, check the issue body for:
-- **Dependencies**: "Depends on: #X" - skip if dependency is still open
-- **Blocking**: "Blocks: #Y" - prioritize issues that unblock others
-- **Phase/Task ID**: Look for "Phase.Task" to understand implementation order
-- **Initiative**: Which initiative this belongs to
-- **Repository**: Which repo(s) this affects
-- **Labels**: Check for `blocked`, `in-progress`, `ready`, `high-priority`, `documentation`, `planning`
-
-**STEP 4: PRIORITIZE ISSUES**
-Rank issues considering:
-1. **Unblocked**: No open dependencies
-2. **Implementation Order**: Earlier phase/task numbers first
-3. **Unassigned**: Available to work on immediately
-4. **Priority**: High-priority initiatives first
-5. **Foundation First**: Planning and architecture before implementation-focused docs
-6. **Smaller Scope**: Prefer focused, single-purpose issues
-7. **Unblocks Others**: Issues that have other issues depending on them
-
-**STEP 5: DISPLAY RESULTS**
-For each relevant issue, show:
+**For project-based search:**
+First get project sections to understand workflow, then get tasks:
 ```
-Issue #123: [Entity Deduplication] Task 1.1: Create Initiative Specification
-Labels: [initiative:entity-deduplication] [documentation] [planning] [high-priority]
-Assignee: unassigned
-Dependencies: None
-Blocks: Issues #124, #125
-Repository: mystage-event-sourcing, mystage-admin-interface
-Preview: Create detailed initiative specification for entity deduplication...
+1. Get project sections with mcp__asana__asana_get_project_sections
+2. Get tasks with mcp__asana__asana_get_tasks for that project
+```
+
+**For all tasks (no filter):**
+```
+Use mcp__asana__asana_search_tasks:
+- workspace: 426521350405896
+- assignee_any: "me"
+- completed: false
+- opt_fields: "name,due_on,projects.name,tags.name,custom_fields,memberships.section.name"
+```
+
+### STEP 3: ANALYZE TASK DETAILS
+
+For each task returned, extract:
+- **Name**: Task title
+- **Project**: Which Asana project it's in
+- **Section**: Which workflow section (Backlog, Ready, In Progress, In Review, Done)
+- **Tags**: Initiative and repository tags
+- **Custom Fields**: Priority, Est. Hours, % Complete
+- **Due Date**: If set
+- **Assignee**: Who it's assigned to
+
+### STEP 4: PRIORITIZE TASKS
+
+Rank tasks considering:
+
+**Primary Factors:**
+1. **Section Status**:
+   - "Ready" section tasks are highest priority (ready to start)
+   - "In Progress" tasks (if you have any, finish those first)
+   - "Backlog" tasks (not yet ready)
+   - Skip "In Review" or "Done" sections
+
+2. **Priority Custom Field**:
+   - High priority first
+   - Medium priority second
+   - Low priority last
+
+3. **Implementation Order**:
+   - Look for "Phase X.Y" in task name
+   - Earlier phase numbers first (Phase 1 before Phase 2)
+   - Earlier task numbers first (Task 1.1 before Task 1.2)
+
+4. **Dependencies**:
+   - Check task description for "Dependencies" section
+   - Prefer tasks with no blocking dependencies
+   - Prioritize tasks that unblock other work
+
+5. **Due Dates**:
+   - Tasks with earlier due dates prioritized
+   - Overdue tasks flagged
+
+**Secondary Factors:**
+6. **Estimated Hours**: Smaller tasks for quick wins
+7. **Project Context**: Group related work together
+
+### STEP 5: DISPLAY RESULTS
+
+For each relevant task, show:
+```
+Task: [Task Name]
+Project: -MS D Admin Portal
+Section: Ready
+Tags: #notification-system, #mystage-admin-interface
+Priority: High
+Est. Hours: 8
+Due: 2025-11-15
 Phase/Task: Phase 1.1
+Asana URL: [url]
+Preview: [First 100 chars of description]
 ```
 
-**STEP 6: MAKE RECOMMENDATION**
+### STEP 6: MAKE RECOMMENDATION
+
 Present the best next task:
 ```
-RECOMMENDED NEXT ISSUE:
-Issue #123: [Entity Deduplication] Task 1.1: Create Initiative Specification
-Reason: Foundation documentation with no dependencies, unblocks 2 other issues
+RECOMMENDED NEXT TASK:
 
-IMPLEMENTATION ORDER:
-Next up after #123:
-- Issue #124: Task 1.2: Architecture Design (depends on #123)
-- Issue #125: Task 1.3: Effort Estimation (depends on #123)
+Task: Phase 1.1: Add notification preferences table
+Project: -MS D Data Pipeline
+Section: Ready
+Priority: High
+Est. Hours: 8
+Tags: #notification-system, #mystage-databases
+Reason: High priority, in Ready section, no blocking dependencies, earliest phase
 
-OTHER OPTIONS:
-Issue #126: [Database Schema] Task 2.1: Schema Documentation - Available but different initiative
+View in Asana: [url]
+
+NEXT UP (In Order):
+1. Phase 1.2: Build notification preferences UI - Blocked by Phase 1.1
+2. Phase 1.3: Create notification API endpoints - Blocked by Phase 1.1
+
+OTHER READY TASKS (Different Initiatives):
+- [Entity Deduplication] Phase 2.1: Schema Analysis - Ready, Medium priority
 ```
 
-**STEP 7: PLATFORM CONTEXT**
-Consider platform documentation priorities when analyzing:
-- **Planning docs first**: Initiatives and specs enable implementation work
-- **Architecture clarity**: System integration docs help all repos
-- **Dependencies early**: Identify blockers before work starts
-- **Initiative sequencing**: Complete related docs together
-- **Cross-cutting first**: Platform-wide decisions before repo-specific work
+### STEP 7: WORKFLOW CONTEXT
 
-**STEP 8: NO MATCHES HANDLING**
-If no issues match the filter:
-- Check if initiative exists: `gh issue list --search "initiative:[initiative-name] in:labels"`
-- Suggest available initiatives: `gh label list | grep "initiative:"`
-- Offer to show all open issues instead
+Provide context about task workflow:
+- **Backlog**: Not yet ready to start (missing dependencies, unclear requirements)
+- **Ready**: All dependencies met, requirements clear, ready to begin
+- **In Progress**: Currently being worked on
+- **In Review**: Awaiting code review or approval
+- **Done**: Completed and verified
 
-**STEP 9: FOLLOW-UP**
+Suggest moving tasks between sections as appropriate.
+
+### STEP 8: NO MATCHES HANDLING
+
+If no tasks match the filter:
+- Check if initiative tag exists: search for the tag name
+- Suggest available initiatives: show common tags
+- Offer to show all open tasks instead
+- Check if all tasks for that initiative are complete
+
+### STEP 9: FOLLOW-UP
+
 Ask if the user wants to:
-- Analyze the recommended issue in detail
-- Start working on the issue immediately
-- See related documentation that should be reviewed first
+- Analyze the recommended task in detail (use `/issue-analyze`)
+- Start working on the task immediately
+- Move a task from Backlog to Ready
+- See related documentation to review first
+- Filter by a different initiative or project
