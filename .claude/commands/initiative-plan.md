@@ -109,9 +109,7 @@ Create a detailed description for each task using this template:
   - "-MS D Fan Experience App" (frontend team - for fan experience work)
   - "-MS D Admin Portal" (admin team - for admin portal work)]
 
-**Repository Tags**: [Which repos will be modified, as tags: #mystage-event-sourcing, #mystage-admin-interface, #mystage-databases, #mystage-app-backend, #mystage-ff-app, #mystage-ff-pro, #mystage-ff-fanex]
-
-**Initiative Tag**: [Initiative name as tag: #notification-system, #entity-deduplication, etc.]
+**Repository**: [Which repos will be modified: mystage-event-sourcing, mystage-admin-interface, mystage-databases, mystage-app-backend, mystage-ff-app, mystage-ff-pro, mystage-ff-fanex]
 
 **Priority**: [High/Medium/Low - for Asana custom field]
 

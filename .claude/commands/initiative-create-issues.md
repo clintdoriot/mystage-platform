@@ -68,8 +68,7 @@ Parse the plan document (`initiatives/_planning/$ARGUMENTS-plan.md`) to extract:
   - Task name/title
   - Description and scope
   - Primary Project (which Asana project)
-  - Repository Tags (which repos affected)
-  - Initiative Tag
+  - Repository (which repos affected)
   - Priority (High/Medium/Low)
   - Estimated Hours
   - Deliverables
@@ -81,8 +80,7 @@ Parse the plan document (`initiatives/_planning/$ARGUMENTS-plan.md`) to extract:
 Parse the implementation plan to extract the **Primary Project** for each task:
 - Look for the "PROJECT/REPOSITORY" section in each task
 - Extract the "Primary Project" field
-- Extract "Repository Tags" field
-- Extract "Initiative Tag" field
+- Extract "Repository" field
 - Extract "Priority" and "Estimated Hours"
 - Build a mapping of task → Asana project
 
@@ -96,8 +94,7 @@ Map project names to Asana project GIDs:
 
 **Validation:**
 - Each task MUST have a Primary Project specified
-- Each task MUST have Repository Tags specified
-- Each task MUST have an Initiative Tag specified
+- Each task MUST have Repository specified
 - If any task is missing required fields, stop and report the error
 - Suggest re-running `/initiative-plan` to fix the issue
 
@@ -112,12 +109,10 @@ Asana Projects:
 - -MS D Admin Portal: [N] tasks
 - -MS D 1.3 Sprint: [N] tasks
 
-Repository Tags:
-- #mystage-databases: [N] tasks
-- #mystage-admin-interface: [N] tasks
-- #mystage-event-sourcing: [N] tasks
-
-Initiative Tag: #[initiative-name]
+Repositories:
+- mystage-databases: [N] tasks
+- mystage-admin-interface: [N] tasks
+- mystage-event-sourcing: [N] tasks
 ```
 
 ### STEP 4: MOVE TO ACTIVE SUBDIRECTORY
@@ -142,10 +137,16 @@ For each task in the implementation plan, create an Asana task using the MCP int
 **For each task:**
 
 1. **Map project name to GID** using the mapping above
-2. **Prepare task description** in markdown format:
+2. **Prepare task name** using format: `[[initiative-name] X.Y] [Task Name]`
+   - Example: `[notification-system 1.1] Add notification preferences table`
+   - This embeds the initiative name and task number in the task name itself
+3. **Prepare task description** in markdown format:
    ```markdown
    ## Initiative
    [Initiative Name] - [Brief description]
+
+   ## Repository
+   [Repository name(s)]
 
    ## Phase/Task
    Phase X: [Phase Name]
@@ -175,20 +176,18 @@ For each task in the implementation plan, create an Asana task using the MCP int
    - Implementation plan: `initiatives/[name]/[name]-plan.md`
    ```
 
-3. **Create the task** using `mcp__asana__asana_create_task`:
-   - `name`: "Phase X.Y: [Task Name]"
+4. **Create the task** using `mcp__asana__asana_create_task`:
+   - `name`: "[[initiative-name] X.Y] [Task Name]"
    - `project_id`: [Asana project GID from mapping]
    - `notes`: [Formatted description from above]
 
-4. **Note about tags and custom fields:**
-   - Tags and custom fields cannot be set via the current MCP integration during task creation
-   - After all tasks are created, provide instructions for manually adding:
-     - Repository tags (e.g., #mystage-databases)
-     - Initiative tag (e.g., #notification-system)
+5. **Note about custom fields:**
+   - Custom fields cannot be set via the current MCP integration during task creation
+   - After all tasks are created, provide instructions for manually setting:
      - Priority custom field (High/Medium/Low)
      - Est. Hours custom field (number)
 
-5. **Track created tasks:**
+6. **Track created tasks:**
    - Store task GID, title, and project in memory
    - Will be used to generate tracking document
 
@@ -204,45 +203,43 @@ Create `initiatives/$ARGUMENTS/tasks-tracking.md` with all created task informat
 ```markdown
 # [Initiative Name] - Asana Task Tracking
 
-**Initiative Tag**: #[initiative-name]
+**Initiative**: [initiative-name]
 **Created**: [Date]
 **Status**: Active
 **Total Tasks**: [N]
 
 ## Asana Tasks Created
 
+All tasks follow the naming convention: `[[initiative-name] X.Y] [Task Name]`
+
 ### -MS D Data Pipeline
-- [ ] Task 1.1: [Task Name] - [Asana URL] (GID: [gid])
-- [ ] Task 1.2: [Task Name] - [Asana URL] (GID: [gid])
+- [ ] [[initiative-name] 1.1] [Task Name] - [Asana URL] (GID: [gid])
+- [ ] [[initiative-name] 1.2] [Task Name] - [Asana URL] (GID: [gid])
 
 ### -MS D Admin Portal
-- [ ] Task 2.1: [Task Name] - [Asana URL] (GID: [gid])
-- [ ] Task 2.2: [Task Name] - [Asana URL] (GID: [gid])
+- [ ] [[initiative-name] 2.1] [Task Name] - [Asana URL] (GID: [gid])
+- [ ] [[initiative-name] 2.2] [Task Name] - [Asana URL] (GID: [gid])
 
 ## Manual Steps Required
 
-Due to MCP integration limitations, you need to manually add the following to each task in Asana:
-
-### Tags to Add:
-1. **Initiative Tag**: #[initiative-name]
-2. **Repository Tags**: (see list per task below)
+Due to MCP integration limitations, you need to manually set the following custom fields in Asana:
 
 ### Custom Fields to Set:
-1. **Priority**: High/Medium/Low (already in task description)
-2. **Est. Hours**: [value] (already in task description)
+1. **Priority**: High/Medium/Low (value is in task description)
+2. **Est. Hours**: [value] (value is in task description)
 
 ### Task Details:
 
-**Task 1.1: [Name]** (GID: [gid])
+**[[initiative-name] 1.1] [Name]** (GID: [gid])
 - Project: -MS D Data Pipeline
-- Repository Tags: #mystage-databases, #mystage-event-sourcing
+- Repository: mystage-databases, mystage-event-sourcing
 - Priority: High
 - Est. Hours: 8
 - [View in Asana]([url])
 
-**Task 1.2: [Name]** (GID: [gid])
+**[[initiative-name] 1.2] [Name]** (GID: [gid])
 - Project: -MS D Admin Portal
-- Repository Tags: #mystage-admin-interface
+- Repository: mystage-admin-interface
 - Priority: Medium
 - Est. Hours: 16
 - [View in Asana]([url])
@@ -250,23 +247,23 @@ Due to MCP integration limitations, you need to manually add the following to ea
 ## Progress Tracking
 
 Track initiative progress across all projects:
-1. Filter by tag #[initiative-name] in Asana
-2. Use Asana search: `#[initiative-name]`
-3. Check task completion status
+1. Search Asana for `[[initiative-name]` to find all tasks
+2. View by project to see team-specific work
+3. Use this tracking doc for cross-project overview
 
-## Repository Tags Reference
+## Repository Reference
 
 Tasks by repository:
-- **#mystage-databases**: Task 1.1, Task 2.3
-- **#mystage-admin-interface**: Task 1.2, Task 3.1
-- **#mystage-event-sourcing**: Task 1.1, Task 2.1
+- **mystage-databases**: Task 1.1, Task 2.3
+- **mystage-admin-interface**: Task 1.2, Task 3.1
+- **mystage-event-sourcing**: Task 1.1, Task 2.1
 
 ## Notes
 
 - All tasks created in appropriate team projects
 - Tasks start in "Backlog" section
 - Move tasks through workflow: Backlog → Ready → In Progress → In Review → Done
-- Initiative tag and repository tags must be added manually
+- Task names include initiative and task number for easy filtering
 ```
 
 ### STEP 7: PROVIDE NEXT STEPS
@@ -292,18 +289,13 @@ NEXT STEPS:
 1. Review the tracking document:
    cat initiatives/$ARGUMENTS/tasks-tracking.md
 
-2. Add tags and custom fields in Asana:
-   Due to MCP limitations, you need to manually add to each task:
+2. Set custom fields in Asana:
+   Due to MCP limitations, you need to manually set custom fields:
 
-   a. Add initiative tag: #$ARGUMENTS
-   b. Add repository tags (listed in tracking doc)
-   c. Set Priority custom field (High/Medium/Low)
-   d. Set Est. Hours custom field (number)
+   a. Set Priority custom field (High/Medium/Low)
+   b. Set Est. Hours custom field (number)
 
-   TIP: You can bulk-edit in Asana by:
-   - Select all tasks for this initiative
-   - Add the initiative tag to all at once
-   - Then edit repository tags individually
+   Values are documented in the task descriptions and tracking doc.
 
 3. Organize tasks in sections:
    - Tasks are created in "Backlog" section by default
@@ -311,7 +303,7 @@ NEXT STEPS:
    - Track through: In Progress → In Review → Done
 
 4. Track progress:
-   - Search Asana for #$ARGUMENTS to see all tasks
+   - Search Asana for `[$ARGUMENTS` to find all tasks
    - View by project to see team-specific work
    - Use tracking doc for cross-project overview
 
