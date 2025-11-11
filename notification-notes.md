@@ -1,37 +1,37 @@
 # Notification System Technical Brainstorming - Session Notes
 
 **Date**: 2025-11-08
-**Last Updated**: 2025-11-09
+**Last Updated**: 2025-11-11
 **Purpose**: Capture key technical constraints and decisions for the notification system architecture
 
 ---
 
 ## Session Summary
 
-**Status**: 🟡 Partial - Awaiting Product Owner Input
+**Status**: 🟢 Core Architecture Complete - Ready for Remaining Topics
 
 **Progress:**
 - ✅ Push notification provider selected (FCM)
 - ✅ Platform constraints documented (FlutterFlow, Account/Profile model)
-- ✅ Storage architecture defined (dual collections)
-- ✅ Notification creation pattern established (backend onCreate triggers)
-- ✅ Notifications collection schema finalized
-- ✅ Deduplication strategy defined
+- ✅ Storage architecture defined (dual collections with fan-out model)
+- ✅ Notification creation pattern established (backend onCreate triggers with fan-out)
+- ✅ Notifications collection schema finalized (account-centric)
+- ✅ Deduplication strategy defined (per account)
 - ✅ Cross-device sync mechanism chosen (Firestore real-time listeners)
 - ✅ Deep linking configuration approach established (constants file)
 - ✅ 7-day auto-delete implementation planned (scheduled Cloud Function)
-- ⏳ Badge count management - **needs product owner decision**
+- ✅ Badge count management - **decided: query on-demand**
+- ✅ Fan-out architecture - **decided: create notification per account**
 
 **Next Steps:**
-1. Get product owner input on badge count management approach
-2. Continue technical brainstorming to cover remaining topics:
+1. Continue technical brainstorming to cover remaining topics:
    - Performance considerations (indexing strategy, query optimization)
    - Testing strategy (how to test push notifications)
    - Monitoring & alerting (metrics to track)
    - Rollout strategy (feature flags, gradual rollout)
    - Security considerations (authorization, PII handling)
-3. Update design specification with complete technical architecture
-4. Move to implementation planning phase
+2. Update design specification with complete technical architecture
+3. Move to implementation planning phase
 
 ---
 
@@ -44,6 +44,35 @@
 - Supports both iOS and Android
 - Seamless integration with existing infrastructure
 - Free tier suitable for Phase 1
+
+---
+
+### ✅ Fan-Out Architecture
+**Decision**: Create separate notification document for each account managing a profile
+
+**Rationale**:
+- **Query Performance**: Direct Firestore queries `where('receiverAccount', '==', accountRef)` are fast and indexable
+- **Independent Read Status**: Each account can mark notifications read/unread independently
+- **Badge Count Simplicity**: Simple query per account, no complex aggregation
+- **Cross-Device Sync**: Firestore real-time listeners work naturally per account
+- **Firestore Query Limitations**: Cannot efficiently query nested map fields (Option A would require client-side filtering)
+- **Storage Cost**: Minimal (2-3x for multi-manager profiles, most profiles have 1 manager)
+- **Scalability**: Indexed queries scale better than client-side filtering
+
+**Trade-offs Accepted**:
+- More storage (1 notification → N documents for N account managers)
+- Write complexity (fan-out logic in onCreate triggers)
+- Multiple deletes needed (N documents vs 1)
+
+**Implementation Pattern**:
+```python
+# For a notification targeting a profile:
+1. Get profile document → read managers list
+2. For each account in managers list:
+   - Create notification document with receiverAccount = that account
+   - Each notification has independent read/unread status
+   - Deduplication key includes accountId to prevent duplicates per account
+```
 
 ---
 
@@ -98,26 +127,53 @@ FlutterFlow has existing FCM + Firestore-based push notification infrastructure:
 **CRITICAL COMPLEXITY**: N-to-N relationship between Accounts and Profiles
 
 **MyStage Model:**
-- **Accounts**: Login credentials, device FCM tokens
-- **Profiles**: Public-facing identities (artist, venue, fan)
-- **Relationship**: Many-to-many
+- **Accounts** (`users/{accountId}`): Login credentials, device FCM tokens
+- **Profiles** (`profiles/{profileId}`): Public-facing identities (artist, venue, fan)
+- **Relationship**: Many-to-many via `profiles.managers` field
   - One Account can manage multiple Profiles
-  - One Profile can be managed by multiple Accounts
+  - One Profile can be managed by multiple Accounts (stored as `managers: [accountRef1, accountRef2]`)
+
+**Data Structure:**
+```python
+# profiles/{profileId}
+{
+  'name': 'The Rolling Stones',
+  'managers': [
+    ref('users/account1'),  # manager
+    ref('users/account2'),  # guitarist
+    ref('users/account3')   # drummer
+  ],
+  # ... other profile fields
+}
+
+# users/{accountId}/fcm_tokens/{tokenId}
+{
+  'token': 'fcm_device_token_string',
+  'platform': 'ios',  # or 'android'
+  'createdAt': timestamp
+}
+```
 
 **Example:**
-- Band Profile "The Rolling Stones" managed by 3 Accounts (manager, guitarist, drummer)
-- Each Account has multiple devices (iPhone, iPad, Android)
+- Band Profile "The Rolling Stones" → `managers: [account1, account2, account3]`
+- Each Account has multiple devices with FCM tokens stored in subcollection
 
 **Notification Challenge:**
-- Notifications are **profile-centric** (e.g., "Someone liked The Rolling Stones' post")
+- Events are **profile-centric** (e.g., "Someone liked The Rolling Stones' post")
+- Notifications must be **account-centric** (each account needs independent read status)
 - FCM tokens are **account-centric** (stored under `users/{accountId}/fcm_tokens`)
-- **Fan-out required**: Notification for 1 Profile → Must deliver to N Accounts → Each with M devices
+- **Fan-out required**: 1 Profile Event → N Account Notifications → M Device Push Notifications
+
+**Fan-Out Flow:**
+1. Event occurs for Profile → Read `profile.managers` list
+2. Create N notification documents (one per account in managers list)
+3. Create push job(s) with all account refs
+4. FlutterFlow queries FCM tokens for each account → delivers to M devices
 
 **Note on FlutterFlow's "users":**
 - FlutterFlow thinks of "users" as individuals with FCM tokens
-- If we use FlutterFlow's built in action to send push notifications, we'd need a custom action to get all accounts for a set of profiles.
 - In MyStage, these are "Accounts"
-- FCM tokens would be added to Accounts, NOT Profiles
+- FCM tokens are stored under Accounts, NOT Profiles
 
 ---
 
@@ -131,7 +187,7 @@ From the design specification (`initiatives/_planning/notification-system.md`):
 - Mark as read/unread, delete individual notifications
 - Cross-device read status sync
 - Profile images, timestamps, deep links
-- Query: "Show me all notifications for profiles I manage"
+- Query: "Show me all notifications for my account" (`where('receiverAccount', '==', myAccountRef)`)
 
 ### 2. Push Notification Delivery
 - Real-time delivery to devices (even when app closed)
@@ -147,54 +203,62 @@ From the design specification (`initiatives/_planning/notification-system.md`):
 ---
 
 ### ✅ Storage Architecture
-**Decision**: Dual storage with separate collections
+**Decision**: Dual storage with separate collections + fan-out model
 
 **Collections:**
-1. **`notifications/{notificationId}`** - In-app notification center
+1. **`notifications/{notificationId}`** - In-app notification center (ACCOUNT-CENTRIC)
    - Purpose: Persistent storage for notification history
-   - Profile-centric (notifications belong to profiles)
+   - **Account-centric with fan-out**: One notification document per account
    - 7-day retention with auto-cleanup
-   - Read/unread status, deletion, cross-device sync
-   - Query pattern: Get all notifications for a specific profile
+   - Each account has independent read/unread status
+   - Query pattern: `where('receiverAccount', '==', myAccountRef).where('deleted', '==', False)`
+   - Fan-out: 1 profile event → N notification documents (N = number of managers)
 
 2. **`ff_user_push_notifications/{pushId}`** - Push notification delivery
    - Purpose: Transient push delivery jobs
    - Account-centric (FCM tokens belong to accounts)
    - Triggers FlutterFlow's existing FCM delivery infrastructure
-   - Contains account refs for fan-out
+   - Contains comma-separated account refs for batch delivery
    - Status tracking (succeeded/failed, num_sent, error)
+   - Typically 1 push job per profile (delivers to all manager accounts)
 
 **Rationale:**
 - Clean separation of concerns (persistent storage vs transient delivery)
 - Leverage FlutterFlow's existing push delivery infrastructure
 - In-app queries don't need to see push delivery metadata
-- Different data models (profile-centric vs account-centric)
+- Account-centric model enables independent read status and efficient queries
+- Fan-out at write time (onCreate trigger) = fast reads, simple queries
 
 ---
 
 ### ✅ Notification Creation Pattern
-**Decision**: Backend onCreate triggers (primary pattern)
+**Decision**: Backend onCreate triggers with fan-out (primary pattern)
 
 **Architecture:**
 ```
-User Action (like, comment, follow, etc.)
+User Action (like, comment, follow, mention, etc.)
   ↓
-FlutterFlow writes to source collection (likes/, comments/, follows/)
+FlutterFlow writes to source collection (likes/, comments/, follows/, posts/)
   ↓
 Backend onCreate trigger fires (onLikeCreated, onCommentCreated, etc.)
   ↓
 Backend function:
-  1. Check deduplication (query existing unread notifications)
-  2. Create in-app notification (write to notifications/)
-  3. Query managing accounts (profile_accounts collection)
-  4. Create push job if configured (write to ff_user_push_notifications/)
+  1. Identify target profile(s) affected by the action
+  2. For each target profile:
+     a. Read profile.managers to get list of account refs
+     b. For each account in managers list:
+        - Check deduplication (per account)
+        - Create in-app notification with receiverAccount = that account
+     c. If notification type configured for push:
+        - Create push job with all account refs for this profile
   ↓
-FlutterFlow's sendUserPushNotificationsTrigger fires
+FlutterFlow's sendUserPushNotificationsTrigger fires (for each push job)
   ↓
 FlutterFlow's delivery logic:
-  - Queries FCM tokens for each account
-  - Batches and sends to Firebase Cloud Messaging
-  - Updates status fields
+  - Parses comma-separated user_refs
+  - For each account: queries fcm_tokens subcollection
+  - Batches and sends to Firebase Cloud Messaging (up to 500 tokens)
+  - Updates status fields (succeeded/failed, num_sent)
 ```
 
 **Key Backend Triggers:**
@@ -202,7 +266,7 @@ FlutterFlow's delivery logic:
 - `onCommentCreated` - When someone comments
 - `onFollowCreated` - When someone follows
 - `onDmCreated` - When someone sends a DM
-- `onMentionCreated` - When someone mentions (@username)
+- `onPostCreated` - When post contains mentions (@username)
 - Auth triggers for account events (email verification, etc.)
 - Scheduled functions for periodic notifications (profile completion prompts)
 
@@ -212,15 +276,54 @@ FlutterFlow's delivery logic:
 - Example: DMs/comments/replies/mentions use push, likes/follows are in-app only
 
 **Fan-out Strategy:**
-- Backend queries `profile_accounts` collection to find all accounts managing a profile
-- Backend writes comma-separated account refs to `ff_user_push_notifications.user_refs`
-- FlutterFlow's existing triggers handle FCM token lookup and delivery to devices
-- Example: 1 Profile → 2 Accounts → 4 Devices (each account has 2 devices)
+- Backend reads `profile.managers` array to get account refs
+- **In-app notifications**: Create N separate documents (one per account)
+- **Push notifications**: Create 1 push job per profile with comma-separated account refs
+- FlutterFlow's existing triggers handle FCM token lookup and delivery to all devices
+- Example: 1 Profile Event → 2 Manager Accounts → 2 In-App Notifications + 1 Push Job → 4 Device Push Notifications
+
+**Example Fan-Out Flow:**
+```python
+@functions_framework.cloud_event
+def on_post_created(cloud_event):
+    post_doc = event.data.after.to_dict()
+
+    # For each mentioned profile in the post
+    for mentioned_profile_ref in post_doc.get('mentions', []):
+        # Get profile document to read managers list
+        profile_doc = mentioned_profile_ref.get()
+        account_refs = profile_doc.get('managers', [])
+
+        # Fan-out: Create notification for EACH account
+        for account_ref in account_refs:
+            dedupe_key = f"mention_{post_doc.id}_{post_doc['authorProfile'].id}_{account_ref.id}"
+            existing = db.collection('notifications').where('dedupeKey', '==', dedupe_key).limit(1).get()
+            if not existing:
+                db.collection('notifications').add({
+                    'receiverAccount': account_ref,
+                    'receiverProfile': mentioned_profile_ref,
+                    'type': 'mention',
+                    'dedupeKey': dedupe_key,
+                    'read': False,
+                    # ... other fields
+                })
+
+        # Create ONE push job for all accounts of this profile
+        if NOTIFICATION_TYPES['mention']['usePush']:
+            db.collection('ff_user_push_notifications').add({
+                'notification_title': f"{author_name} mentioned {profile_name}",
+                'notification_text': post_doc['content'][:100],
+                'initial_page_name': 'PostDetailPage',
+                'parameter_data': json.dumps({'postId': post_doc.id}),
+                'user_refs': ','.join([ref.path for ref in account_refs])
+            })
+```
 
 **FlutterFlow Team Workflow:**
 - Like button → Firestore Action: Create Document in `likes/` collection
 - Comment button → Firestore Action: Create Document in `comments/` collection
 - Follow button → Firestore Action: Create Document in `follows/` collection
+- Post with mentions → Firestore Action: Create Document in `posts/` collection
 - **No custom notification logic needed in frontend** - backend handles everything
 
 **Fallback for Ad-hoc Notifications:**
@@ -232,8 +335,9 @@ FlutterFlow's delivery logic:
 - **Reliability**: Notifications guaranteed to be created (not dependent on frontend completing)
 - **Security**: Backend enforces rules, frontend can't fake notifications
 - **Consistency**: Works from app, admin interface, APIs, future integrations
-- **FlutterFlow simplicity**: Team just creates core data, backend handles notifications
+- **FlutterFlow simplicity**: Team just creates core data, backend handles fan-out
 - **Future-proof**: Easy to add new notification types without frontend changes
+- **Independent read status**: Each account manages their own notification state
 
 ---
 
@@ -243,17 +347,18 @@ FlutterFlow's delivery logic:
 
 ### ✅ Notifications Collection Schema
 
-**Collection**: `notifications/{notificationId}`
+**Collection**: `notifications/{notificationId}` (ACCOUNT-CENTRIC with FAN-OUT)
 
 **Schema** (Python/Firestore):
 ```python
 {
-  # Identity
-  "id": str,                          # Auto-generated document ID
-  "receiverProfile": DocumentReference,  # Profile receiving the notification
+  # Identity (ACCOUNT-CENTRIC)
+  "id": str,                             # Auto-generated document ID
+  "receiverAccount": DocumentReference,  # THIS account (primary query field)
+  "receiverProfile": DocumentReference,  # Profile that was targeted (context)
 
   # Type & Content
-  "type": str,                        # "like", "comment", "follow", "dm", etc.
+  "type": str,                        # "like", "comment", "follow", "dm", "mention", etc.
   "title": str,                       # "John Doe liked your post"
   "body": str,                        # Additional details
   "imageUrl": str | None,             # Profile image or content thumbnail
@@ -268,58 +373,79 @@ FlutterFlow's delivery logic:
   "deepLinkPage": str,                # FlutterFlow page name
   "deepLinkParams": dict,             # JSON params for navigation
 
-  # State management
-  "read": bool,                       # Read/unread status (default: False)
-  "deleted": bool,                    # Soft delete flag (default: False)
+  # State management (PER ACCOUNT)
+  "read": bool,                       # Read/unread status for THIS account (default: False)
+  "deleted": bool,                    # Soft delete flag for THIS account (default: False)
   "createdAt": firestore.SERVER_TIMESTAMP,
   "readAt": firestore.SERVER_TIMESTAMP | None,
 
   # Push notification tracking
-  "hasPush": bool,                    # Whether this notification triggered a push
-  "receiverAccounts": list[DocumentReference],  # Accounts that manage receiverProfile
+  "hasPush": bool,                    # Whether this notification type uses push
 
-  # Deduplication
-  "dedupeKey": str,                   # Type-specific composite key for dedup
+  # Deduplication (PER ACCOUNT)
+  "dedupeKey": str,                   # Includes accountId: "type_entity_source_accountId"
 }
 ```
 
 **Key Decisions:**
+- **Account-centric**: `receiverAccount` is the primary field (one document per account)
+- **Fan-out model**: Same event creates N documents (one per managing account)
 - Use DocumentReferences for all profile/account relationships (not string IDs)
+- **Independent state**: Each account has their own `read`, `deleted`, `readAt` fields
 - Soft delete with `deleted: bool`, hard delete after 7 days via scheduled cleanup
-- Store `receiverAccounts` for query efficiency (avoid profile_accounts lookup on every query)
-- `hasPush` tracks whether this notification triggered a push notification
-- Type-specific `dedupeKey` format: `"type_<some_keys>"` (defined per notification type)
+- Type-specific `dedupeKey` includes `accountId`: `"type_{entityId}_{sourceId}_{accountId}"`
+- `receiverProfile` provides context (which profile was targeted) but isn't the query field
+
+**Fan-Out Example:**
+- Event: User X likes Profile A's post
+- Profile A has managers: [Account 1, Account 2]
+- Result: 2 notification documents created:
+  - `{receiverAccount: ref('users/account1'), receiverProfile: ref('profiles/profileA'), ...}`
+  - `{receiverAccount: ref('users/account2'), receiverProfile: ref('profiles/profileA'), ...}`
 
 **Indexes Required:**
-- `receiverProfile + createdAt` (descending) - Main query for notification center
-- `dedupeKey` - Deduplication queries
-- `createdAt` - Cleanup queries
+- `receiverAccount + createdAt` (descending) - Main query: "all notifications for my account"
+- `receiverAccount + read` - Badge count: "unread notifications for my account"
+- `dedupeKey` - Deduplication queries (per account)
+- `createdAt` - Cleanup queries (7-day auto-delete)
 
 ---
 
 ### ✅ Deduplication Strategy
 
-**Decision**: Skip creating duplicate notifications
+**Decision**: Skip creating duplicate notifications per account
 
 **Implementation**:
 ```python
-# Simple deduplication query - only check dedupeKey
+# Deduplication includes accountId - prevents duplicate per account
+dedupe_key = f"{type}_{entity_id}_{source_id}_{account_id}"
+
 existing = db.collection('notifications').where(
     'dedupeKey', '==', dedupe_key
 ).limit(1).get()
 
 if existing:
-    # Skip creating duplicate
+    # Skip creating duplicate for THIS account
     return
 ```
 
 **Deduplication Key Format**:
-- General format: `"type_<some_keys>"`
+- General format: `"type_{entityId}_{sourceId}_{accountId}"`
+- **MUST include accountId** since we fan out per account
 - Exact format defined when implementing each notification type
-- Examples (to be confirmed during implementation):
-  - Like: `"like_{postId}_{sourceProfileId}"`
-  - Follow: `"follow_{sourceProfileId}"`
-  - Comment: `"comment_{postId}_{sourceProfileId}"`
+- Examples:
+  - Like: `"like_{postId}_{sourceProfileId}_{accountId}"`
+  - Follow: `"follow_{sourceProfileId}_{accountId}"`
+  - Comment: `"comment_{postId}_{sourceProfileId}_{accountId}"`
+  - Mention: `"mention_{postId}_{sourceProfileId}_{accountId}"`
+
+**Why AccountId in Dedupe Key:**
+- Each account gets their own notification document
+- Same event creates N notifications (one per manager)
+- Dedupe prevents duplicate notifications **per account**, not globally
+- Example: If User X likes Profile A's post twice:
+  - First like → creates 2 notifications (one for each manager)
+  - Second like → skipped (dedupe key exists for each account)
 
 **Note**: Not overly concerned with deduplication complexity in Phase 1. Will refine as needed.
 
@@ -331,23 +457,30 @@ if existing:
 
 **Implementation**:
 ```python
-# Backend: Update read status
+# Backend: Update read status for THIS account's notification
 notification_ref.update({
     'read': True,
     'readAt': firestore.SERVER_TIMESTAMP
 })
 
-# Frontend: Real-time listener on all devices
+# Frontend: Real-time listener on all devices for THIS account
 db.collection('notifications')
-  .where('receiverProfile', 'in', myManagedProfiles)
+  .where('receiverAccount', '==', myAccountRef)
   .where('deleted', '==', False)
   .orderBy('createdAt', 'desc')
-  .snapshots()  # Real-time updates across all devices
+  .snapshots()  # Real-time updates across all devices for this account
 ```
 
+**How It Works:**
+- Account 1 marks notification as read on their iPhone
+- Update written to Firestore: `notifications/{docId}.read = true`
+- Account 1's iPad listener receives update → UI updates instantly
+- Account 2's devices see NO change (different notification document)
+
 **Rationale**:
-- Built into Firestore, automatic sync
-- Works across all devices instantly
+- Built into Firestore, automatic sync across devices
+- Account-centric queries are simple and fast
+- Each account's read status is independent (as required)
 - No additional infrastructure needed
 - Acceptable read costs for Phase 1 (optimize later if needed)
 
@@ -452,47 +585,209 @@ def cleanup_old_notifications(cloud_event):
 
 ---
 
-## Open Architecture Questions
+### ✅ Badge Count Management
 
-### Badge Count Management
+**Decision**: Query on-demand (when app opens/foregrounds)
 
-**Context**: App icon needs to show unread notification count badge. One account can manage multiple profiles, so badge count = total unread across ALL managed profiles.
-
-**Option A: Query on-demand** (when app opens/foregrounds)
+**Implementation**:
 ```python
-def get_badge_count(account_id):
-    managed_profiles = get_profiles_for_account(account_id)
-
-    unread_count = db.collection('notifications').where(
-        'receiverProfile', 'in', managed_profiles
-    ).where('read', '==', False).where('deleted', '==', False
-    ).count().get()
+# Simple query - account-centric model makes this fast
+def get_badge_count(account_ref):
+    unread_count = db.collection('notifications')\
+        .where('receiverAccount', '==', account_ref)\
+        .where('read', '==', False)\
+        .where('deleted', '==', False)\
+        .count().get()
 
     return unread_count
 ```
-- ✅ Always accurate
-- ✅ Simple implementation
-- ⚠️ Query on every app open
 
-**Option B: Maintain counter in accounts collection**
+**When to Update Badge:**
+- App opens or foregrounds
+- Real-time listener detects notification changes
+- After marking notifications as read
+
+**Rationale**:
+- ✅ Always accurate (no drift)
+- ✅ Simple implementation (no counter to maintain)
+- ✅ Account-centric query is fast and indexed
+- ✅ No reconciliation logic needed
+- ✅ No risk of count getting out of sync
+- ⚠️ Small query cost on app open (acceptable for Phase 1)
+
+**Badge Count Includes:**
+- All notifications (both push-enabled and in-app only)
+- Account sees total unread count across all profiles they manage
+
+**Optimization (Future):**
+- If query cost becomes concern, can add counter with reconciliation
+- For Phase 1, query approach is simpler and more reliable
+
+---
+
+---
+
+## Complete Fan-Out Flow Example
+
+**Scenario**: User X mentions two bands in a post
+- Profile A (Rolling Stones) has managers: [Account 1, Account 2]
+- Profile B (Beatles) has managers: [Account 3, Account 4]
+
+### Step 1: User Creates Post
 ```python
-# accounts/{accountId}
+post = {
+  'content': 'Check out @TheRollingStones and @TheBeatles!',
+  'authorProfile': ref('profiles/userX'),
+  'mentions': [
+    ref('profiles/profileA'),  # Rolling Stones
+    ref('profiles/profileB')   # Beatles
+  ]
+}
+# Written to posts/ collection by FlutterFlow
+```
+
+### Step 2: Backend Trigger Fires
+```python
+@functions_framework.cloud_event
+def on_post_created(cloud_event):
+    post_doc = event.data.after.to_dict()
+
+    # For each mentioned profile
+    for profile_ref in post_doc.get('mentions', []):
+        profile_doc = profile_ref.get()
+        account_refs = profile_doc.get('managers', [])
+
+        # Fan-out: Create notification for each account
+        for account_ref in account_refs:
+            # ... create notification (see below)
+
+        # Create push job for all accounts of this profile
+        # ... create push job (see below)
+```
+
+### Step 3: In-App Notifications Created (4 total)
+```python
+# Notification 1: Account 1 (Rolling Stones manager)
 {
-  "unreadNotificationCount": 5  # Maintained by backend triggers
+  'receiverAccount': ref('users/account1'),
+  'receiverProfile': ref('profiles/profileA'),
+  'type': 'mention',
+  'title': 'User X mentioned The Rolling Stones',
+  'body': 'Check out @TheRollingStones and @TheBeatles!',
+  'read': False,
+  'dedupeKey': 'mention_post123_userX_account1',
+  'hasPush': True,
+  # ... other fields
 }
 
-# Backend increments/decrements on notification create/read
-```
-- ✅ Fast (no query needed)
-- ✅ Real-time sync via account listener
-- ⚠️ Risk of count drift (if updates fail)
-- ⚠️ Needs reconciliation function to fix drift
+# Notification 2: Account 2 (Rolling Stones guitarist)
+{
+  'receiverAccount': ref('users/account2'),
+  'receiverProfile': ref('profiles/profileA'),
+  'type': 'mention',
+  'title': 'User X mentioned The Rolling Stones',
+  'body': 'Check out @TheRollingStones and @TheBeatles!',
+  'read': False,
+  'dedupeKey': 'mention_post123_userX_account2',
+  'hasPush': True,
+  # ... other fields
+}
 
-**Questions for Product Owner:**
-1. Which approach - query on-demand (A) or maintain counter (B)?
-2. If counter approach, acceptable to have occasional drift that gets reconciled?
-3. Should badge count include ALL notifications or only push-enabled types?
-4. What's the expected max number of profiles per account? (affects query performance)
+# Notification 3: Account 3 (Beatles manager)
+{
+  'receiverAccount': ref('users/account3'),
+  'receiverProfile': ref('profiles/profileB'),
+  'type': 'mention',
+  'title': 'User X mentioned The Beatles',
+  'body': 'Check out @TheRollingStones and @TheBeatles!',
+  'read': False,
+  'dedupeKey': 'mention_post123_userX_account3',
+  'hasPush': True,
+  # ... other fields
+}
+
+# Notification 4: Account 4 (Beatles bassist)
+{
+  'receiverAccount': ref('users/account4'),
+  'receiverProfile': ref('profiles/profileB'),
+  'type': 'mention',
+  'title': 'User X mentioned The Beatles',
+  'body': 'Check out @TheRollingStones and @TheBeatles!',
+  'read': False,
+  'dedupeKey': 'mention_post123_userX_account4',
+  'hasPush': True,
+  # ... other fields
+}
+```
+
+### Step 4: Push Jobs Created (2 total)
+```python
+# Push Job 1: Rolling Stones profile (delivers to accounts 1 & 2)
+{
+  'notification_title': 'User X mentioned The Rolling Stones',
+  'notification_text': 'Check out @TheRollingStones and @TheBeatles!',
+  'initial_page_name': 'PostDetailPage',
+  'parameter_data': '{"postId": "post123"}',
+  'user_refs': 'users/account1,users/account2',
+  'status': 'pending',
+  'createdAt': timestamp
+}
+
+# Push Job 2: Beatles profile (delivers to accounts 3 & 4)
+{
+  'notification_title': 'User X mentioned The Beatles',
+  'notification_text': 'Check out @TheRollingStones and @TheBeatles!',
+  'initial_page_name': 'PostDetailPage',
+  'parameter_data': '{"postId": "post123"}',
+  'user_refs': 'users/account3,users/account4',
+  'status': 'pending',
+  'createdAt': timestamp
+}
+```
+
+### Step 5: FlutterFlow Delivers Push Notifications
+```python
+# For Push Job 1:
+- Parse user_refs → [account1, account2]
+- Query users/account1/fcm_tokens → [iPhone, iPad]
+- Query users/account2/fcm_tokens → [Android]
+- Send to FCM (3 devices)
+
+# For Push Job 2:
+- Parse user_refs → [account3, account4]
+- Query users/account3/fcm_tokens → [iPhone]
+- Query users/account4/fcm_tokens → [Android, Tablet]
+- Send to FCM (3 devices)
+
+# Total: 6 push notifications delivered
+```
+
+### Step 6: User Interaction
+```python
+# Account 1 opens app on iPhone
+- Queries: where('receiverAccount', '==', account1)
+- Sees: 1 unread notification (about Rolling Stones)
+- Badge count: 1
+
+# Account 1 marks notification as read on iPhone
+- Updates: notifications/{notif1}.read = true
+- All Account 1 devices (iPhone, iPad) sync instantly
+- Account 2 sees NO change (different notification document)
+
+# Account 3 opens app on iPhone
+- Queries: where('receiverAccount', '==', account3)
+- Sees: 1 unread notification (about Beatles)
+- Badge count: 1
+```
+
+### Summary
+- **1 Post** with 2 mentions
+- **2 Profiles** mentioned
+- **4 Accounts** managing those profiles
+- **4 In-App Notifications** created (one per account)
+- **2 Push Jobs** created (one per profile)
+- **6 Push Notifications** delivered (to all devices)
+- **Independent read status** (Account 1 marks read ≠ Account 2 marks read)
 
 ---
 
@@ -518,4 +813,4 @@ Full design specification: `initiatives/_planning/notification-system.md`
 - Firebase Functions (30+ already deployed)
 - Firestore (primary database)
 - Firebase Auth
-- FlutterFlow's push notification infrastructure (ready to use, but how much of it should we use?)
+- FlutterFlow's push notification infrastructure (leveraged for delivery)
