@@ -744,6 +744,168 @@ No changes needed - managed by FlutterFlow
    - `ff_user_push_notifications/` collection (push delivery jobs)
    - `ff_push_notifications/` collection (broadcast notifications)
 
+#### Complete Fan-Out Example
+
+**Scenario**: User X mentions two bands in a post
+- Profile A (Rolling Stones) has managers: [Account 1, Account 2]
+- Profile B (Beatles) has managers: [Account 3, Account 4]
+
+**Step 1: User Creates Post**
+```python
+post = {
+  'content': 'Check out @TheRollingStones and @TheBeatles!',
+  'authorProfile': ref('profiles/userX'),
+  'mentions': [
+    ref('profiles/profileA'),  # Rolling Stones
+    ref('profiles/profileB')   # Beatles
+  ]
+}
+# Written to posts/ collection by FlutterFlow
+```
+
+**Step 2: Backend Trigger Fires**
+```python
+@functions_framework.cloud_event
+def on_post_created(cloud_event):
+    post_doc = event.data.after.to_dict()
+
+    # For each mentioned profile
+    for profile_ref in post_doc.get('mentions', []):
+        profile_doc = profile_ref.get()
+        account_refs = profile_doc.get('managers', [])
+
+        # Fan-out: Create notification for each account
+        for account_ref in account_refs:
+            # ... create notification (see below)
+
+        # Create push job for all accounts of this profile
+        # ... create push job (see below)
+```
+
+**Step 3: In-App Notifications Created (4 total)**
+```python
+# Notification 1: Account 1 (Rolling Stones manager)
+{
+  'receiverAccount': ref('users/account1'),
+  'receiverProfile': ref('profiles/profileA'),
+  'type': 'mention',
+  'title': 'User X mentioned The Rolling Stones',
+  'body': 'Check out @TheRollingStones and @TheBeatles!',
+  'read': False,
+  'dedupeKey': 'mention_post123_userX_account1',
+  'hasPush': True,
+  # ... other fields
+}
+
+# Notification 2: Account 2 (Rolling Stones guitarist)
+{
+  'receiverAccount': ref('users/account2'),
+  'receiverProfile': ref('profiles/profileA'),
+  'type': 'mention',
+  'title': 'User X mentioned The Rolling Stones',
+  'body': 'Check out @TheRollingStones and @TheBeatles!',
+  'read': False,
+  'dedupeKey': 'mention_post123_userX_account2',
+  'hasPush': True,
+  # ... other fields
+}
+
+# Notification 3: Account 3 (Beatles manager)
+{
+  'receiverAccount': ref('users/account3'),
+  'receiverProfile': ref('profiles/profileB'),
+  'type': 'mention',
+  'title': 'User X mentioned The Beatles',
+  'body': 'Check out @TheRollingStones and @TheBeatles!',
+  'read': False,
+  'dedupeKey': 'mention_post123_userX_account3',
+  'hasPush': True,
+  # ... other fields
+}
+
+# Notification 4: Account 4 (Beatles bassist)
+{
+  'receiverAccount': ref('users/account4'),
+  'receiverProfile': ref('profiles/profileB'),
+  'type': 'mention',
+  'title': 'User X mentioned The Beatles',
+  'body': 'Check out @TheRollingStones and @TheBeatles!',
+  'read': False,
+  'dedupeKey': 'mention_post123_userX_account4',
+  'hasPush': True,
+  # ... other fields
+}
+```
+
+**Step 4: Push Jobs Created (2 total)**
+```python
+# Push Job 1: Rolling Stones profile (delivers to accounts 1 & 2)
+{
+  'notification_title': 'User X mentioned The Rolling Stones',
+  'notification_text': 'Check out @TheRollingStones and @TheBeatles!',
+  'initial_page_name': 'PostDetailPage',
+  'parameter_data': '{"postId": "post123"}',
+  'user_refs': 'users/account1,users/account2',
+  'status': 'pending',
+  'createdAt': timestamp
+}
+
+# Push Job 2: Beatles profile (delivers to accounts 3 & 4)
+{
+  'notification_title': 'User X mentioned The Beatles',
+  'notification_text': 'Check out @TheRollingStones and @TheBeatles!',
+  'initial_page_name': 'PostDetailPage',
+  'parameter_data': '{"postId": "post123"}',
+  'user_refs': 'users/account3,users/account4',
+  'status': 'pending',
+  'createdAt': timestamp
+}
+```
+
+**Step 5: FlutterFlow Delivers Push Notifications**
+```python
+# For Push Job 1:
+- Parse user_refs → [account1, account2]
+- Query users/account1/fcm_tokens → [iPhone, iPad]
+- Query users/account2/fcm_tokens → [Android]
+- Send to FCM (3 devices)
+
+# For Push Job 2:
+- Parse user_refs → [account3, account4]
+- Query users/account3/fcm_tokens → [iPhone]
+- Query users/account4/fcm_tokens → [Android, Tablet]
+- Send to FCM (3 devices)
+
+# Total: 6 push notifications delivered
+```
+
+**Step 6: User Interaction**
+```python
+# Account 1 opens app on iPhone
+- Queries: where('receiverAccount', '==', account1)
+- Sees: 1 unread notification (about Rolling Stones)
+- Badge count: 1
+
+# Account 1 marks notification as read on iPhone
+- Updates: notifications/{notif1}.read = true
+- All Account 1 devices (iPhone, iPad) sync instantly
+- Account 2 sees NO change (different notification document)
+
+# Account 3 opens app on iPhone
+- Queries: where('receiverAccount', '==', account3)
+- Sees: 1 unread notification (about Beatles)
+- Badge count: 1
+```
+
+**Summary of Fan-Out Flow:**
+- **1 Post** with 2 mentions
+- **2 Profiles** mentioned
+- **4 Accounts** managing those profiles
+- **4 In-App Notifications** created (one per account)
+- **2 Push Jobs** created (one per profile)
+- **6 Push Notifications** delivered (to all devices)
+- **Independent read status** (Account 1 marks read ≠ Account 2 marks read)
+
 #### Data Migration
 
 - **Migration needed?**: No
