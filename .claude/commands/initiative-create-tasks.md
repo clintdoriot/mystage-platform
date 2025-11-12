@@ -2,7 +2,7 @@ Create Asana tasks for an initiative based on the implementation plan. This crea
 
 ## Command Usage
 ```
-/initiative-create-issues [initiative-name]
+/initiative-create-tasks [initiative-name]
 ```
 
 **Prerequisites:**
@@ -31,7 +31,7 @@ if [ "$CURRENT_BRANCH" != "main" ]; then
   echo "1. Ensure initiative PR is approved and merged"
   echo "2. Switch to main: git checkout main"
   echo "3. Pull latest: git pull origin main"
-  echo "4. Run: /initiative-create-issues $ARGUMENTS"
+  echo "4. Run: /initiative-create-tasks $ARGUMENTS"
   echo ""
   echo "WHY: Initiative files must be on main before creating tasks"
   echo "     Tasks will reference the merged specification and plan"

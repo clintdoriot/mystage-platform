@@ -204,7 +204,7 @@ EOF
 ### When to Work on Main
 
 **ONLY these scenarios allow main branch work:**
-- `/initiative-create-issues` - After initiative PR is merged
+- `/initiative-create-tasks` - After initiative PR is merged
 - Emergency documentation fixes (with explicit approval)
 
 ### Committing Changes
@@ -285,12 +285,10 @@ Initiatives move through three stages:
    - Both files stay in `_planning/` during planning phase
 
 2. **Active** (own subdirectory) - Contains specs, progress tracking, related docs
-   - `/initiative-create-issues` moves files to `initiatives/[name]/` subdirectory
-   - Creates `initiatives/[name]/issues.json` with issue definitions
-   - Creates `initiatives/[name]/issues-tracking.md` tracking document
-   - Milestone created in each affected repository
-   - Issues created in their designated repositories
-   - All issues added to common GitHub Project #3
+   - `/initiative-create-tasks` moves files to `initiatives/[name]/` subdirectory
+   - Creates `initiatives/[name]/tasks-tracking.md` tracking document
+   - Creates Asana tasks in appropriate team projects
+   - All tasks tagged with initiative name for filtering
    - Initiative marked as "Active"
 
 3. **Complete** (`_complete/`) - Shipped to production, moved for historical reference
@@ -376,7 +374,7 @@ When making changes to platform docs:
 - `/initiative-brainstorm-design [idea]` - Create non-technical design specification (designers/PMs)
 - `/initiative-brainstorm-technical [initiative-name]` - Add technical architecture requirements (architects)
 - `/initiative-plan [initiative-name]` - Break down initiative into implementation phases
-- `/initiative-create-issues [initiative-name]` - Create GitHub milestone and issues (after PR merge)
+- `/initiative-create-tasks [initiative-name]` - Create Asana tasks (after PR merge)
 
 ### Issue Management
 - `/issue-identify [initiative-name|filter]` - Find next issue to work on
@@ -427,22 +425,19 @@ When making changes to platform docs:
    - Approve and merge PR to main
    - Initiative documents now on main branch in `_planning/`
 
-5. **Issue Creation** - `/initiative-create-issues [initiative-name]`
+5. **Task Creation** - `/initiative-create-tasks [initiative-name]`
    - **Must run on main branch** (after PR merge)
-   - Parses Primary Repository from each task in the plan
+   - Parses Primary Project from each task in the plan
    - **Moves files** from `_planning/` to `initiatives/[name]/` subdirectory
-   - Generates `initiatives/[name]/issues.json` with repository per issue
-   - Creates tracking document `initiatives/[name]/issues-tracking.md`
-   - User runs: `python scripts/create-issues.py initiatives/[name]/issues.json`
-   - Script creates milestone in each affected repository
-   - Script creates each issue in its designated repository
-   - Script adds all issues to common GitHub Project #3
+   - Creates Asana tasks in appropriate team projects via MCP
+   - Creates tracking document `initiatives/[name]/tasks-tracking.md`
+   - All tasks tagged with initiative name for filtering
    - Uses `doc-updater` agent to update status and references
    - Uses `architecture-validator` agent to verify everything
 
 6. **Development Workflow:**
-   - `/issue-identify` - Find next issue to work on
-   - `/issue-analyze [issue-number]` - Clarify requirements before starting
+   - `/issue-identify` - Find next task to work on in Asana
+   - `/issue-analyze [task-gid]` - Clarify requirements before starting
    - Work on implementation in appropriate repository
    - `/doc-review [changed-files]` - Review docs before committing (uses `architecture-validator`)
 
