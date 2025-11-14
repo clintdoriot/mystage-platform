@@ -196,74 +196,47 @@ For each task in the implementation plan, create an Asana task using the MCP int
 - Report all failures at the end
 - Provide option to retry failed tasks
 
-### STEP 6: CREATE TRACKING DOCUMENT
+### STEP 6: CREATE REFERENCE DOCUMENT
 
-Create `initiatives/$ARGUMENTS/tasks-tracking.md` with all created task information:
+Create `initiatives/$ARGUMENTS/tasks-reference.md` as a simple reference to the created Asana tasks:
 
 ```markdown
-# [Initiative Name] - Asana Task Tracking
+# [Initiative Name] - Asana Tasks Reference
 
 **Initiative**: [initiative-name]
 **Created**: [Date]
-**Status**: Active
 **Total Tasks**: [N]
-
-## Asana Tasks Created
 
 All tasks follow the naming convention: `[[initiative-name] X.Y] [Task Name]`
 
-### -MS D Data Pipeline
-- [ ] [[initiative-name] 1.1] [Task Name] - [Asana URL] (GID: [gid])
-- [ ] [[initiative-name] 1.2] [Task Name] - [Asana URL] (GID: [gid])
+**To find all tasks:** Search Asana for `[[initiative-name]`
 
-### -MS D Admin Portal
-- [ ] [[initiative-name] 2.1] [Task Name] - [Asana URL] (GID: [gid])
-- [ ] [[initiative-name] 2.2] [Task Name] - [Asana URL] (GID: [gid])
+## Tasks by Project
 
-## Manual Steps Required
+### -MS D Data Pipeline ([N] tasks)
+- [[initiative-name] 1.1] [Task Name] - [Asana URL] (GID: [gid])
+- [[initiative-name] 1.2] [Task Name] - [Asana URL] (GID: [gid])
 
-Due to MCP integration limitations, you need to manually set the following custom fields in Asana:
+### -MS D Admin Portal ([N] tasks)
+- [[initiative-name] 2.1] [Task Name] - [Asana URL] (GID: [gid])
+- [[initiative-name] 2.2] [Task Name] - [Asana URL] (GID: [gid])
 
-### Custom Fields to Set:
-1. **Priority**: High/Medium/Low (value is in task description)
-2. **Est. Hours**: [value] (value is in task description)
+## Tasks by Repository
 
-### Task Details:
+**mystage-databases**: Task 1.1, Task 2.3
+**mystage-admin-interface**: Task 1.2, Task 3.1
+**mystage-event-sourcing**: Task 1.1, Task 2.1
 
-**[[initiative-name] 1.1] [Name]** (GID: [gid])
-- Project: -MS D Data Pipeline
-- Repository: mystage-databases, mystage-event-sourcing
-- Priority: High
-- Est. Hours: 8
-- [View in Asana]([url])
+## Manual Setup Required
 
-**[[initiative-name] 1.2] [Name]** (GID: [gid])
-- Project: -MS D Admin Portal
-- Repository: mystage-admin-interface
-- Priority: Medium
-- Est. Hours: 16
-- [View in Asana]([url])
+Due to MCP integration limitations, manually set these custom fields in Asana:
 
-## Progress Tracking
+| Task | Priority | Est. Hours | Repository |
+|------|----------|------------|------------|
+| [[initiative-name] 1.1] [Name] | High | 8 | mystage-databases, mystage-event-sourcing |
+| [[initiative-name] 1.2] [Name] | Medium | 16 | mystage-admin-interface |
 
-Track initiative progress across all projects:
-1. Search Asana for `[[initiative-name]` to find all tasks
-2. View by project to see team-specific work
-3. Use this tracking doc for cross-project overview
-
-## Repository Reference
-
-Tasks by repository:
-- **mystage-databases**: Task 1.1, Task 2.3
-- **mystage-admin-interface**: Task 1.2, Task 3.1
-- **mystage-event-sourcing**: Task 1.1, Task 2.1
-
-## Notes
-
-- All tasks created in appropriate team projects
-- Tasks start in "Backlog" section
-- Move tasks through workflow: Backlog → Ready → In Progress → In Review → Done
-- Task names include initiative and task number for easy filtering
+Values are also documented in each task's description field.
 ```
 
 ### STEP 7: PROVIDE NEXT STEPS
@@ -276,7 +249,7 @@ Show the user what was created and how to proceed:
 Created files:
 - initiatives/$ARGUMENTS/$ARGUMENTS.md (moved from _planning)
 - initiatives/$ARGUMENTS/$ARGUMENTS-plan.md (moved from _planning)
-- initiatives/$ARGUMENTS/tasks-tracking.md (tracking document)
+- initiatives/$ARGUMENTS/tasks-reference.md (task reference)
 
 Asana Tasks Created: [N]
 - -MS D Data Pipeline: [N] tasks
@@ -286,28 +259,19 @@ Asana Tasks Created: [N]
 
 NEXT STEPS:
 
-1. Review the tracking document:
-   cat initiatives/$ARGUMENTS/tasks-tracking.md
+1. Set custom fields in Asana:
+   See initiatives/$ARGUMENTS/tasks-reference.md for the table of Priority and Est. Hours
+   values to set manually in Asana (MCP limitations prevent automatic setting).
 
-2. Set custom fields in Asana:
-   Due to MCP limitations, you need to manually set custom fields:
-
-   a. Set Priority custom field (High/Medium/Low)
-   b. Set Est. Hours custom field (number)
-
-   Values are documented in the task descriptions and tracking doc.
-
-3. Organize tasks in sections:
-   - Tasks are created in "Backlog" section by default
+2. Organize tasks in Asana:
+   - Tasks created in default "Backlog" section
    - Move to "Ready" when ready to start
-   - Track through: In Progress → In Review → Done
+   - Track progress through normal Asana workflow
 
-4. Track progress:
-   - Search Asana for `[$ARGUMENTS` to find all tasks
-   - View by project to see team-specific work
-   - Use tracking doc for cross-project overview
+3. Find all initiative tasks:
+   Search Asana for `[[initiative-name]` to see all tasks across projects
 
-5. Commit the tracking document:
+4. Commit the reference document:
    git add initiatives/$ARGUMENTS/
    git commit -m "feat(initiative): create Asana tasks for $ARGUMENTS"
 ```
