@@ -34,6 +34,12 @@ Primary consumer-facing application for fans to:
 
 Active development. Needs better documentation and Claude tooling setup.
 
+## Related Initiatives
+
+- [Comprehensive Notification System](../initiatives/_planning/notification-system.md) - Phase 1 (in-app notification center, push notifications)
+- [Chat System Integration](../initiatives/_planning/chat-integration.md) - Real-time messaging
+- [Profile Onboarding Workflows](../initiatives/_planning/profile-onboarding.md) - Improved user onboarding
+
 ## Notes
 
 - FlutterFlow-based means limited traditional git workflow

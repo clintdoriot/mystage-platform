@@ -103,6 +103,15 @@ pages → features → entities → shared
 
 Active development. Well-documented with layered architecture patterns and Claude tooling (commands, agents, documentation agents).
 
+## Related Initiatives
+
+- [Admin Roles & Access Control](../initiatives/_planning/admin-roles-access.md) - Enhanced RBAC system
+- [Admin Pipeline Management Tools](../initiatives/_planning/admin-pipeline-tools.md) - URL queue, scrape monitoring, extraction review
+- [Admin Data Management](../initiatives/_planning/admin-data-management.md) - Enhanced entity CRUD operations
+- [Admin Content Moderation](../initiatives/_planning/admin-content-moderation.md) - Content moderation workflows
+- [Entity Deduplication System](../initiatives/_planning/entity-deduplication.md) - Admin review UI for entity merging
+- [Comprehensive Notification System](../initiatives/_planning/notification-system.md) - Phase 2 (admin notifications, manual push)
+
 ## Key Features
 
 - **Multi-tenant auth** - Firebase Identity Platform multi-tenancy
