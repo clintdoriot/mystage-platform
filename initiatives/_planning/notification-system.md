@@ -284,6 +284,9 @@ Reduces notification spam and fatigue.
 - Pipeline failures (event-sourcing)
 - Data quality issues
 - System performance alerts
+- Profile claim reviewed/approved/rejected
+- User blocked/unblocked
+- User banned from event
 
 **Capabilities Added:**
 - Per-notification-type controls (granular or grouped categories)
