@@ -69,7 +69,8 @@ jobs:
 
             Review this documentation pull request using our custom /doc-review command.
 
-            The PR branch is already checked out. Run the review comparing against the base branch.
+            The PR branch is already checked out. Run the review comparing against the base branch using:
+            /doc-review --base ${{ steps.pr.outputs.base_ref }}
 
             **After completing the review:**
             - Use `gh pr comment` to post the overall review summary with the validation report
