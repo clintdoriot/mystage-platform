@@ -600,17 +600,20 @@ GROUP BY service_name
 
 ## Estimated Effort
 
-**Total:** 8-12 weeks with 1-2 engineers
+**Total:** 2-4 weeks with 0.5 engineer (~40 hours total)
 
 **Breakdown:**
-- UV migration: 1-2 weeks (straightforward, repetitive)
-- Terraform setup: 1 week
-- Logfire instrumentation: 1-2 weeks
-- Cloud Tasks migration: 3-4 weeks (largest piece, stage by stage)
-- Pydantic-AI update: 1-2 weeks
-- Testing/validation: 1-2 weeks
+- UV migration: 4 hours
+- Terraform setup: 3 hours
+- Logfire instrumentation: 2 hours
+- Cloud Tasks client: 2 hours
+- Cloud Tasks migration: 16 hours (largest piece, stage by stage)
+- DLQ + Failed Tasks: 3 hours
+- Dashboard & Alerts: 3.5 hours
+- Pydantic-AI update: 4 hours
+- Cleanup & docs: 3 hours
 
-**Note:** Estimates assume dedicated focus. Timeline extends if work is interleaved with other priorities.
+**Note:** Estimates assume half-time engineer. Testing infrastructure improvements (5 hours) optional/nice to have.
 
 ---
 
