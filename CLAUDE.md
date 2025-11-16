@@ -39,6 +39,7 @@ This repository is the **single source of truth** for:
 - **Living Documentation**: Keep docs current as understanding evolves
 - **Lightweight but Useful**: Prefer clear, concise docs over exhaustive detail
 - **Clear Boundaries**: Platform = integration, Repos = implementation
+- **Planning as Working Documents**: Initiative planning docs in `_planning/` may temporarily contain implementation details to facilitate accurate task breakdown. These details migrate to repository docs as work proceeds.
 
 See `architecture/README.md` for detailed guidance on what belongs where.
 
