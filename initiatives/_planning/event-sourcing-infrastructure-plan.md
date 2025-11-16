@@ -4,7 +4,7 @@
 
 This plan breaks down the comprehensive infrastructure overhaul of the event-sourcing data pipeline into actionable phases and tasks. The initiative modernizes dependency management, implements Infrastructure as Code, migrates from Pub/Sub to Cloud Tasks, enhances observability with Logfire dashboards, and updates core AI dependencies.
 
-**Total Estimated Effort:** 8-12 weeks with 1-2 dedicated engineers
+**Total Estimated Effort:** 2-4 weeks with 0.5 engineer (~40 hours total)
 
 ---
 

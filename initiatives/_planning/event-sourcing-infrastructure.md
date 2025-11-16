@@ -51,6 +51,8 @@ Current pipeline infrastructure has reliability gaps, inconsistent tooling, and 
 
 **Added**: Technical Brainstorming Phase
 
+> **Note on Implementation Details**: This planning document includes detailed code patterns, configurations, and schemas as reference for task creation. These implementation-level details are intentionally comprehensive to facilitate accurate task breakdown and effort estimation. As work proceeds, these details will migrate to `mystage-event-sourcing/docs/` repository documentation, and this platform document will be updated to reflect integration-level information only.
+
 ### Implementation Sequence
 
 1. UV + pyproject.toml migration (all services)
