@@ -138,45 +138,74 @@ For each task in the implementation plan, create an Asana task using the MCP int
 
 1. **Map project name to GID** using the mapping above
 2. **Prepare task name** using format: `[[initiative-name] X.Y] [Task Name]`
-   - Example: `[notification-system 1.1] Add notification preferences table`
+   - Example: `[notification-system 1.1] Design Firestore Schema & Indexes`
    - This embeds the initiative name and task number in the task name itself
-3. **Prepare task description** in markdown format:
+
+3. **Extract ALL task details from the plan** including:
+   - SCOPE OF WORK section (complete description)
+   - REPOSITORY/LOCATION (primary repo, team, also affects)
+   - EXPECTED OUTPUTS (deliverables and acceptance criteria)
+   - PREREQUISITES (dependencies and required decisions)
+   - CLARIFICATION NEEDED (questions to answer before starting)
+   - IMPLEMENTATION APPROACH (research/design/implementation/review phases)
+   - ACCEPTANCE CRITERIA (checklist items)
+   - EFFORT ESTIMATE (size, time, complexity, risk)
+
+4. **Prepare comprehensive task description** in markdown format:
    ```markdown
-   ## Initiative
-   [Initiative Name] - [Brief description]
+   ## Scope of Work
+   [Copy SCOPE OF WORK section from plan - the complete task description]
 
    ## Repository
-   [Repository name(s)]
+   **Primary Repository**: [repo-name]
+   **Team**: [team-name]
+   **Also Affects**: [other repos if any]
 
-   ## Phase/Task
-   Phase X: [Phase Name]
-   Task X.Y: [Task Name]
+   ## Expected Outputs
 
-   ## Description
-   [Task description from plan]
+   **Deliverables:**
+   [Copy complete deliverables list from plan]
 
-   ## Deliverables
-   - [ ] [Deliverable 1]
-   - [ ] [Deliverable 2]
-   - [ ] [Deliverable 3]
+   **Acceptance Criteria:**
+   [Copy acceptance criteria from EXPECTED OUTPUTS section]
 
-   ## Dependencies
-   [List any task dependencies]
+   ## Prerequisites
+
+   **Dependencies from previous tasks:**
+   [List dependencies - reference other task numbers]
+
+   **Required decisions:**
+   [Copy required decisions from plan]
+
+   ## Clarification Needed
+   [Copy CLARIFICATION NEEDED section from plan if present]
+
+   ## Implementation Approach
+
+   [Copy complete IMPLEMENTATION APPROACH section from plan, including:
+   - Research phase
+   - Design phase
+   - Implementation phase
+   - Review phase]
+
+   ## Acceptance Criteria Checklist
+   [Copy complete checklist from ACCEPTANCE CRITERIA section]
 
    ## Effort Estimate
-   - **Priority**: [High/Medium/Low]
-   - **Estimated Hours**: [hours]
+   - **Size**: [XS/S/M/L/XL]
+   - **Estimated Time**: [hours]
    - **Complexity**: [Low/Medium/High]
-
-   ## Implementation Notes
-   [Any important implementation details from plan]
+   - **Risk**: [🟢/🟡/🔴] [Risk description]
+   - **Priority**: [High/Medium/Low]
 
    ## Related Documentation
    - Initiative spec: `initiatives/[name]/[name].md`
    - Implementation plan: `initiatives/[name]/[name]-plan.md`
    ```
 
-4. **Create the task** using `mcp__asana__asana_create_task`:
+   **IMPORTANT**: The task description should be comprehensive enough that an engineer can implement the task WITHOUT needing to read the full initiative spec or plan. Include ALL relevant schemas, configuration examples, implementation patterns, and technical details from the plan.
+
+5. **Create the task** using `mcp__asana__asana_create_task`:
    - `name`: "[[initiative-name] X.Y] [Task Name]"
    - `project_id`: [Asana project GID from mapping]
    - `notes`: [Formatted description from above]
