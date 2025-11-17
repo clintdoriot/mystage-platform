@@ -17,6 +17,7 @@
 |------|-------|-----------|--------|
 | 1    | Planning | Platform Documentation & Planning | ⏳ In Progress |
 | 1-2  | Critical | Stripe Integration Fix | 🔴 Start ASAP |
+| 1-2  | Data Quality | Venue Merge (Entity Resolution - Venues) | 🟢 Active - Tasks Created |
 | 1-4  | Critical | Complete In-Flight Work (Go High Level, Follower Sync, Account Deletion, Profile Claim) | 🟡 Assess & Complete |
 | 2-4  | Foundation | Database Schema & Tooling (Phase 1: Documentation) | 🟢 Start Week 2 |
 
@@ -37,6 +38,7 @@
 **Phase 1 Milestone**: ✅ **Foundation Complete**
 - Database schema documented and tooling operational
 - Event sourcing infrastructure modernized
+- Venue merge operational (subset of entity deduplication)
 - Critical fixes deployed (Stripe, in-flight work)
 - Admin basic tools operational
 - **Target**: End of Month 3
@@ -234,6 +236,7 @@ Month:  1    2    3    4    5    6    7    8    9    10
 Foundation:
 DB Schema   [====================]
 Event Src        [========]  (2-4 weeks, 0.5 engineer)
+Venue Merge [====]  (1.5-2 weeks, 1 engineer)
 Stripe Fix  [====]
 In-Flight   [========]
 Admin Roles      [====]
@@ -272,6 +275,8 @@ Security                                   [============]
 ```
 Week 1-4:   Platform Docs (✓) → Stripe Fix → In-Flight Work
               ↓
+Week 1-2:   Venue Merge (parallel with above)
+              ↓
 Week 2-8:   Database Schema → Event Sourcing
               ↓                     ↓
 Week 7-10:  Admin Roles    Facebook Scraper
@@ -292,6 +297,7 @@ Week 29-32: Dev Onboard + Backend Cons
 ### Q1 (Months 1-3): Foundation
 - ✅ Database schema established
 - ✅ Event sourcing modernized
+- ✅ Venue merge operational
 - ✅ Critical fixes deployed
 - ✅ Basic admin tools
 
@@ -336,11 +342,13 @@ Week 29-32: Dev Onboard + Backend Cons
    - ✅ Complete platform documentation (in progress)
    - 🟢 Assess in-flight work status
    - 🟢 Start Stripe integration fix
+   - 🟢 Start Venue Merge implementation (tasks created)
 
 2. **Week 2**:
    - 🟢 Begin database schema documentation
    - 🟢 Plan event sourcing infrastructure work
    - 🟢 Resource allocation for Q1
+   - 🟢 Complete Venue Merge (1.5-2 weeks)
 
 3. **Month 1 End**:
    - Review progress on foundation work

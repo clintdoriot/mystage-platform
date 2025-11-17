@@ -98,6 +98,30 @@
   - Admin review UI: 2 weeks
   - Testing & rollout: 2-3 weeks
 
+### Venue Merge (Entity Resolution - Venues Only)
+- **Size**: M (1.5-2 weeks with 1 engineer, ~63 hours total)
+- **Complexity**: High - Data integrity critical, multi-step merge process
+- **Risk**: 🟡 Medium - Well-defined scope but touches multiple collections
+- **Dependencies**: None (can start immediately)
+- **Priority**: High - Subset of Entity Deduplication, focused on venues
+- **Status**: 🟢 Active - Tasks created in Asana
+- **Affected Repositories**: mystage-event-sourcing (backend), mystage-admin-interface (UI)
+- **Effort Breakdown**:
+  - Foundation & Models (1.1-1.5): 8 hours
+  - Cloud Tasks Integration (2.1-2.3): 7 hours
+  - Validation Service (3.1-3.4): 11 hours
+  - Merge Executor (4.1-4.5): 16 hours
+  - Entity Resolution Update (5.1): 2 hours
+  - Testing & Docs (6.1-6.2): 8 hours
+  - Admin UI (4.1-4.5): 11 hours
+- **Key Deliverables**:
+  - VenueDuplicate model and soft-delete support
+  - Cloud Tasks integration for async merge processing
+  - Validation service with confidence scoring
+  - Merge executor with full data migration
+  - Admin UI for merge operations
+  - Integration tests and documentation
+
 ### Data Enrichment Pipeline
 - **Size**: L (6-8 weeks)
 - **Complexity**: Medium-High - Multiple external APIs, orchestration
@@ -362,17 +386,17 @@
 |------|-------|----------------------|-------------|
 | XS   | 0     | 0                    | - |
 | S    | 2     | 2-4                  | NFT Architecture, Admin Roles |
-| M    | 11    | 32-49                | Event Sourcing (2-4 weeks), Stripe, Profile Onboarding, Content Mod, Data Mgmt, Extraction, Pipeline Perf, Developer Onboarding, + 4 in-flight |
+| M    | 12    | 34-51                | Event Sourcing (2-4 weeks), Venue Merge (1.5-2 weeks), Stripe, Profile Onboarding, Content Mod, Data Mgmt, Extraction, Pipeline Perf, Developer Onboarding, + 4 in-flight |
 | L    | 7     | 42-56                | Database Schema, Facebook, Data Enrichment, Dynamic Scraping, Pipeline Tools, NFT Security |
 | XL   | 5     | 50-60                | Entity Dedup, Notifications, Chat, NFT Backend |
 | XXL  | 0     | 0                    | - |
 
-**Total Estimated Effort**: ~126-169 weeks (excluding in-flight assessment)
+**Total Estimated Effort**: ~128-171 weeks (excluding in-flight assessment)
 
 ### By Priority
 | Priority | Count | Initiatives |
 |----------|-------|-------------|
-| High     | 12    | Event Sourcing, Database Schema, Facebook, Entity Dedup, Admin Roles, Pipeline Tools, Data Mgmt, Notifications, Stripe, Account Deletion, Platform Docs |
+| High     | 13    | Event Sourcing, Venue Merge, Database Schema, Facebook, Entity Dedup, Admin Roles, Pipeline Tools, Data Mgmt, Notifications, Stripe, Account Deletion, Platform Docs |
 | Med-High | 2     | Chat, App Backend |
 | Medium   | 8     | Data Enrichment, Dynamic Scraping, Extraction, Content Mod, Profile Onboarding, Developer Onboarding, Follower Sync, Profile Claim |
 | Med-Low  | 1     | Pipeline Perf |
@@ -382,7 +406,7 @@
 | Risk Level | Count | Initiatives |
 |------------|-------|-------------|
 | 🔴 High    | 4     | Entity Dedup, NFT Architecture, NFT Backend, NFT Security |
-| 🟡 Medium  | 10    | Event Sourcing, App Backend, Facebook, Data Enrichment, Dynamic Scraping, Notifications, Chat, Stripe, Go High Level, Account Deletion |
+| 🟡 Medium  | 11    | Event Sourcing, Venue Merge, App Backend, Facebook, Data Enrichment, Dynamic Scraping, Notifications, Chat, Stripe, Go High Level, Account Deletion |
 | 🟢 Low     | 11    | Database Schema, Extraction, Pipeline Perf, Admin Roles, Pipeline Tools, Content Mod, Data Mgmt, Profile Onboarding, NFT Admin, Platform Docs, Developer Onboarding |
 
 ### Critical Path Dependencies
