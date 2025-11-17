@@ -24,13 +24,13 @@
 | Week | Track | Initiative | Status |
 |------|-------|-----------|--------|
 | 5-8  | Foundation | Database Schema & Tooling (Phase 2-3: CI/CD & Tooling) | Continues |
-| 5-8  | Foundation | Event Sourcing Infrastructure (Pub/Sub → Cloud Tasks) | 🟢 Start Week 5 |
+| 5-8  | Foundation | Event Sourcing Infrastructure (UV migration, Terraform, Cloud Tasks) | 🟢 Start Week 5 (~40 hours, 0.5 engineer) |
 | 7-8  | Admin | Admin Roles & Access Control | 🟢 Start Week 7 |
 
 ### Month 3
 | Week | Track | Initiative | Status |
 |------|-------|-----------|--------|
-| 9-10 | Foundation | Event Sourcing Infrastructure (Scheduler refactoring) | Continues |
+| 9    | Foundation | Event Sourcing Infrastructure (Complete - Logfire dashboards, Pydantic-AI) | ✅ Complete by Week 9 |
 | 9-12 | Data | Facebook Scraper Finalization | 🟢 Start Week 9 |
 | 10-13| Admin | Admin Data Management | 🟢 Start Week 10 |
 
@@ -233,7 +233,7 @@ Month:  1    2    3    4    5    6    7    8    9    10
 
 Foundation:
 DB Schema   [====================]
-Event Src   [====================]
+Event Src        [========]  (2-4 weeks, 0.5 engineer)
 Stripe Fix  [====]
 In-Flight   [========]
 Admin Roles      [====]

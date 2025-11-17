@@ -25,16 +25,28 @@
 ## Infrastructure & Technical Debt
 
 ### Event Sourcing Infrastructure Modernization
-- **Size**: L (6-8 weeks)
-- **Complexity**: High - Replacing Cloud Tasks, refactoring scheduler, updating all service groups
+- **Size**: M (2-4 weeks with 0.5 engineer, ~40 hours total)
+- **Complexity**: High - UV migration, Terraform IaC, Cloud Tasks migration, Logfire observability
 - **Risk**: 🟡 Medium - Well-understood patterns but touches many services
 - **Dependencies**: None (enables other work)
-- **Priority**: High - Unblocks pipeline improvements
+- **Priority**: High - Unblocks pipeline improvements and observability
+- **Status**: 🟡 Planning - Technical spec and implementation plan complete
 - **Effort Breakdown**:
-  - Pub/Sub → Cloud Tasks migration: 2 weeks
-  - Scheduler refactoring: 1-2 weeks
-  - Service group updates: 2-3 weeks
-  - Testing & rollout: 1 week
+  - UV + pyproject.toml migration: 4 hours
+  - Terraform setup (IaC foundation): 3 hours
+  - Logfire instrumentation standards: 2 hours
+  - Cloud Tasks client library: 2 hours
+  - Cloud Tasks migration (all stages): 16 hours
+  - DLQ + Failed Tasks collection: 3 hours
+  - Dashboard & Alerts: 3.5 hours
+  - Pydantic-AI update: 4 hours
+  - Cleanup & documentation: 3 hours
+- **Key Deliverables**:
+  - All services use UV + pyproject.toml
+  - Terraform managing Cloud Tasks queues and DLQ
+  - All Pub/Sub replaced with Cloud Tasks
+  - Failed tasks visible in admin UI
+  - Pipeline funnel metrics and alerts operational
 
 ### App Backend Consolidation
 - **Size**: M-L (3-6 weeks, varies by approach)
@@ -350,12 +362,12 @@
 |------|-------|----------------------|-------------|
 | XS   | 0     | 0                    | - |
 | S    | 2     | 2-4                  | NFT Architecture, Admin Roles |
-| M    | 10    | 30-45                | Stripe, Profile Onboarding, Content Mod, Data Mgmt, Extraction, Pipeline Perf, Developer Onboarding, + 4 in-flight |
-| L    | 8     | 48-64                | Event Sourcing, Database Schema, Facebook, Data Enrichment, Dynamic Scraping, Pipeline Tools, NFT Security |
+| M    | 11    | 32-49                | Event Sourcing (2-4 weeks), Stripe, Profile Onboarding, Content Mod, Data Mgmt, Extraction, Pipeline Perf, Developer Onboarding, + 4 in-flight |
+| L    | 7     | 42-56                | Database Schema, Facebook, Data Enrichment, Dynamic Scraping, Pipeline Tools, NFT Security |
 | XL   | 5     | 50-60                | Entity Dedup, Notifications, Chat, NFT Backend |
 | XXL  | 0     | 0                    | - |
 
-**Total Estimated Effort**: ~130-173 weeks (excluding in-flight assessment)
+**Total Estimated Effort**: ~126-169 weeks (excluding in-flight assessment)
 
 ### By Priority
 | Priority | Count | Initiatives |
