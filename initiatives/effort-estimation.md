@@ -48,18 +48,6 @@
   - Failed tasks visible in admin UI
   - Pipeline funnel metrics and alerts operational
 
-### App Backend Consolidation
-- **Size**: M-L (3-6 weeks, varies by approach)
-- **Complexity**: Medium-High - Depends on consolidation strategy
-- **Risk**: 🟡 Medium - Need to decide on approach first
-- **Dependencies**: None
-- **Priority**: Medium - Simplifies architecture
-- **Effort Breakdown**:
-  - Analysis & decision: 1 week
-  - Implementation: 2-4 weeks
-  - Migration & testing: 1 week
-- **Decision needed**: Merge into event-sourcing, keep separate, or reorganize?
-
 ### Database Schema & Tooling
 - **Size**: L (6-8 weeks for Phase 1-3)
 - **Complexity**: Medium - Documentation heavy, tooling setup
@@ -86,19 +74,7 @@
   - Scraper implementation: 1-2 weeks
   - Testing & validation: 1 week
 
-### Entity Deduplication System
-- **Size**: XL (8-12 weeks)
-- **Complexity**: Very High - Complex algorithms, multiple entity types
-- **Risk**: 🔴 High - Requires careful design to avoid data loss
-- **Dependencies**: Admin tools (for review workflow), Database schema tooling
-- **Priority**: High - Critical for data quality
-- **Effort Breakdown**:
-  - Algorithm design & prototyping: 2-3 weeks
-  - Implementation (venues, artists, performances): 4-6 weeks
-  - Admin review UI: 2 weeks
-  - Testing & rollout: 2-3 weeks
-
-### Venue Merge (Entity Resolution - Venues Only)
+### Venue Merge (Dedupe)
 - **Size**: M (1.5-2 weeks with 1 engineer, ~63 hours total)
 - **Complexity**: High - Data integrity critical, multi-step merge process
 - **Risk**: 🟡 Medium - Well-defined scope but touches multiple collections
@@ -120,6 +96,23 @@
   - Validation service with confidence scoring
   - Merge executor with full data migration
   - Admin UI for merge operations
+  - Integration tests and documentation
+
+### Artist / Performance Merge (Dedupe)
+- **Size**: M (3-4 weeks with 1 engineer)
+- **Complexity**: High - Data integrity critical, builds on Venue Merge patterns
+- **Risk**: 🟡 Medium - Reuses proven patterns from Venue Merge
+- **Dependencies**: Venue Merge (Dedupe) - patterns and infrastructure
+- **Priority**: High - Critical for data quality
+- **Status**: 🟡 Planning
+- **Affected Repositories**: mystage-event-sourcing (backend), mystage-admin-interface (UI)
+- **Effort Breakdown**:
+  - Artist merge implementation: 1.5-2 weeks
+  - Performance merge implementation: 1.5-2 weeks
+- **Key Deliverables**:
+  - ArtistDuplicate and PerformanceDuplicate models
+  - Merge executors for artists and performances
+  - Admin UI extensions for artist/performance merging
   - Integration tests and documentation
 
 ### Data Enrichment Pipeline
@@ -386,18 +379,18 @@
 |------|-------|----------------------|-------------|
 | XS   | 0     | 0                    | - |
 | S    | 2     | 2-4                  | NFT Architecture, Admin Roles |
-| M    | 12    | 34-51                | Event Sourcing (2-4 weeks), Venue Merge (1.5-2 weeks), Stripe, Profile Onboarding, Content Mod, Data Mgmt, Extraction, Pipeline Perf, Developer Onboarding, + 4 in-flight |
+| M    | 12    | 34-49                | Event Sourcing (2-4 weeks), Venue Merge (1.5-2 weeks), Artist/Performance Merge (3-4 weeks), Stripe, Profile Onboarding, Content Mod, Data Mgmt, Extraction, Pipeline Perf, Developer Onboarding, + 4 in-flight |
 | L    | 7     | 42-56                | Database Schema, Facebook, Data Enrichment, Dynamic Scraping, Pipeline Tools, NFT Security |
-| XL   | 5     | 50-60                | Entity Dedup, Notifications, Chat, NFT Backend |
+| XL   | 4     | 40-48                | Notifications, Chat, NFT Backend |
 | XXL  | 0     | 0                    | - |
 
-**Total Estimated Effort**: ~128-171 weeks (excluding in-flight assessment)
+**Total Estimated Effort**: ~118-157 weeks (excluding in-flight assessment)
 
 ### By Priority
 | Priority | Count | Initiatives |
 |----------|-------|-------------|
-| High     | 13    | Event Sourcing, Venue Merge, Database Schema, Facebook, Entity Dedup, Admin Roles, Pipeline Tools, Data Mgmt, Notifications, Stripe, Account Deletion, Platform Docs |
-| Med-High | 2     | Chat, App Backend |
+| High     | 13    | Event Sourcing, Venue Merge, Artist/Performance Merge, Database Schema, Facebook, Admin Roles, Pipeline Tools, Data Mgmt, Notifications, Stripe, Account Deletion, Platform Docs |
+| Med-High | 1     | Chat |
 | Medium   | 8     | Data Enrichment, Dynamic Scraping, Extraction, Content Mod, Profile Onboarding, Developer Onboarding, Follower Sync, Profile Claim |
 | Med-Low  | 1     | Pipeline Perf |
 | TBD      | 4     | All NFT initiatives (depends on business priority) |
@@ -405,8 +398,8 @@
 ### By Risk
 | Risk Level | Count | Initiatives |
 |------------|-------|-------------|
-| 🔴 High    | 4     | Entity Dedup, NFT Architecture, NFT Backend, NFT Security |
-| 🟡 Medium  | 11    | Event Sourcing, Venue Merge, App Backend, Facebook, Data Enrichment, Dynamic Scraping, Notifications, Chat, Stripe, Go High Level, Account Deletion |
+| 🔴 High    | 3     | NFT Architecture, NFT Backend, NFT Security |
+| 🟡 Medium  | 11    | Event Sourcing, Venue Merge, Artist/Performance Merge, Facebook, Data Enrichment, Dynamic Scraping, Notifications, Chat, Stripe, Go High Level, Account Deletion |
 | 🟢 Low     | 11    | Database Schema, Extraction, Pipeline Perf, Admin Roles, Pipeline Tools, Content Mod, Data Mgmt, Profile Onboarding, NFT Admin, Platform Docs, Developer Onboarding |
 
 ### Critical Path Dependencies

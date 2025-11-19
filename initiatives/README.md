@@ -39,16 +39,61 @@ When an initiative is shipped to production and closed, the entire subdirectory 
 
 **Note**: All initiatives below are currently in the planning phase (`_planning/`).
 
+## Initiative Summary Table
+
+| Initiative | Team | Owner | Primary Repo | Est. Weeks | Priority | Status |
+|------------|------|-------|--------------|------------|----------|--------|
+| **In-Flight Work** |||||||
+| &nbsp;&nbsp;&nbsp;&nbsp;Go High Level Integration | Backend | Alex | mystage-event-sourcing | 3-4 | High | ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Follower Sync | Frontend | Jerry | mystage-app-backend | 3-4 | Medium | ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Account Deletion | Frontend | Jerry | mystage-app-backend | 3-4 | High | ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Profile Claim Management | Frontend | Jerry | mystage-app-backend | 3-4 | Medium | ⏳ In Progress |
+| **Infrastructure & Technical Debt** |||||||
+| &nbsp;&nbsp;&nbsp;&nbsp;DPL Modernization | Backend | Alex | mystage-event-sourcing | 2-4 | High | 🟢 Active |
+| &nbsp;&nbsp;&nbsp;&nbsp;Database Schema & Tooling | Platform | Clint | mystage-databases | 6-8 | High | 🟡 Planning |
+| **Data Pipeline & Quality** |||||||
+| &nbsp;&nbsp;&nbsp;&nbsp;Facebook Scraper | Backend | Archit | mystage-event-sourcing | 3-4 | High | 🟡 Planning / ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Venue Merge (Dedupe) | Backend | Drew | mystage-event-sourcing | 1.5-2 | High | ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Artist / Performance Merge (Dedupe) | Backend | Drew | mystage-event-sourcing | 3-4 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Data Enrichment Pipeline | Backend | Vaibhav | mystage-event-sourcing | 6-8 | Medium | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Dynamic Scraping System | Backend | Vaibhav | mystage-event-sourcing | 6-8 | Medium | 🟡 Planning / ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Extraction Improvements | Backend | Vaibhav | mystage-event-sourcing | 4-6 | Medium | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Pipeline Performance Optimization | Backend | Vaibhav | mystage-event-sourcing | 3-4 | Medium-Low | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Data Retention & Archival | Backend | Drew | mystage-databases | TBD | Low | 🟡 Planning |
+| **User-Facing Features** |||||||
+| &nbsp;&nbsp;&nbsp;&nbsp;Notification System | Frontend | Jerry | mystage-app | 10-12 | High | 🟢 Active |
+| &nbsp;&nbsp;&nbsp;&nbsp;Chat System Integration (Pro-Dash) | Frontend | Jerry | mystage-app | 10-12 | Medium-High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Stripe Payment Integration Fix | Frontend | Jerry | mystage-app-backend | 2-4 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Profile Onboarding Workflows | Frontend | Jerry | mystage-app | 3-4 | Medium | 🟡 Planning |
+| **Admin & Internal Tools** |||||||
+| &nbsp;&nbsp;&nbsp;&nbsp;Admin Roles & Access Control | Admin | Elvin | mystage-admin-interface | 2-3 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Admin Pipeline Management Tools | Admin | Elvin | mystage-admin-interface | 6-8 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Admin Content Moderation | Admin | Elvin | mystage-admin-interface | 3-5 | Medium | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Admin Data Management | Admin | Elvin | mystage-admin-interface | 4-6 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Chat System Integration (Admin) | Admin | Elvin | mystage-admin-interface | TBD | TBD | 🟡 Planning |
+| **Platform & Process** |||||||
+| &nbsp;&nbsp;&nbsp;&nbsp;Platform Documentation & Planning | Platform | Clint | mystage-platform | 3-4 | High | ✅ Complete |
+| &nbsp;&nbsp;&nbsp;&nbsp;Developer Onboarding | Platform | Clint | mystage-platform | 2-3 | Medium | 🟡 Planning |
+| **NFT Sticker Exchange** |||||||
+| &nbsp;&nbsp;&nbsp;&nbsp;NFT Architecture & Design | TBD | TBD | mystage-exchange-nfts | 1-2 | TBD | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;NFT Backend & APIs | TBD | TBD | mystage-exchange-nfts | 10-12 | TBD | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;NFT Admin Tools | TBD | TBD | mystage-admin-interface | 3-4 | TBD | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;NFT Security & Minting | TBD | TBD | mystage-exchange-nfts | 6-8 | TBD | 🟡 Planning |
+
+**Total**: 28 initiatives | **Estimated Effort**: 118-157 weeks | **Active**: 2 | **In Progress**: 7
+
+---
+
 ## Initiative Categories
 
 ### Infrastructure & Technical Debt
-- [Event Sourcing Infrastructure Modernization](_planning/event-sourcing-infrastructure.md)
-- [App Backend Consolidation](_planning/app-backend-consolidation.md)
+- [DPL Modernization](dpl-modernization/dpl-modernization.md) 🟢 Active
 - [Database Schema & Tooling](_planning/database-schema-tooling.md)
 
 ### Data Pipeline & Quality
-- [Facebook Scraper Finalization](_planning/facebook-scraper.md)
-- [Entity Deduplication System](_planning/entity-deduplication.md)
+- [Facebook Scraper](_planning/facebook-scraper.md)
+- [Venue Merge (Dedupe)](venue-merge/tasks-reference.md) ⏳ In Progress
+- [Artist / Performance Merge (Dedupe)](_planning/artist-performance-merge.md)
 - [Data Enrichment Pipeline](_planning/data-enrichment.md)
 - [Dynamic Scraping System](_planning/dynamic-scraping.md)
 - [Extraction Improvements](_planning/extraction-improvements.md)
@@ -62,8 +107,8 @@ When an initiative is shipped to production and closed, the entire subdirectory 
 - [Admin Interface: Data Management](_planning/admin-data-management.md)
 
 ### User-Facing Features
-- [Comprehensive Notification System](_planning/notification-system.md)
-- [Chat System Integration](_planning/chat-integration.md)
+- [Notification System](notification-system/) 🟢 Active
+- [Chat System Integration (Pro-Dash)](_planning/chat-integration.md)
 - [Stripe Payment Integration Fix](_planning/stripe-integration.md)
 - [Profile Onboarding Workflows](_planning/profile-onboarding.md)
 
@@ -119,8 +164,8 @@ Foundation and critical business needs:
 - Stripe Integration Fix, Account Deletion
 - Platform Documentation (current, nearly complete)
 
-### Medium-High Priority (2 initiatives)
-- Chat System Integration, App Backend Consolidation
+### Medium-High Priority (1 initiative)
+- Chat System Integration
 
 ### Medium Priority (8 initiatives)
 - Data Enrichment, Dynamic Scraping, Extraction Improvements
