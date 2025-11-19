@@ -44,43 +44,41 @@ When an initiative is shipped to production and closed, the entire subdirectory 
 | Initiative | Team | Owner | Primary Repo | Est. Weeks | Priority | Status |
 |------------|------|-------|--------------|------------|----------|--------|
 | **In-Flight Work** |||||||
-| &nbsp;&nbsp;&nbsp;&nbsp;Go High Level Integration | Backend | Alex | mystage-event-sourcing | 3-4 | High | ⏳ In Progress |
-| &nbsp;&nbsp;&nbsp;&nbsp;Follower Sync | Frontend | Jerry | mystage-app-backend | 3-4 | Medium | ⏳ In Progress |
-| &nbsp;&nbsp;&nbsp;&nbsp;Account Deletion | Frontend | Jerry | mystage-app-backend | 3-4 | High | ⏳ In Progress |
-| &nbsp;&nbsp;&nbsp;&nbsp;Profile Claim Management | Frontend | Jerry | mystage-app-backend | 3-4 | Medium | ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Account Deletion | Frontend | Jerry | mystage-app-backend | 2 | High | ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Profile Claim Management | Frontend | Jerry | mystage-app-backend | 3 | Medium | ⏳ In Progress |
 | **Infrastructure & Technical Debt** |||||||
 | &nbsp;&nbsp;&nbsp;&nbsp;DPL Modernization | Backend | Alex | mystage-event-sourcing | 2-4 | High | 🟢 Active |
-| &nbsp;&nbsp;&nbsp;&nbsp;Database Schema & Tooling | Platform | Clint | mystage-databases | 6-8 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Database Schema & Tooling | Platform | Clint | mystage-databases | 2 | High | 🟡 Planning |
 | **Data Pipeline & Quality** |||||||
-| &nbsp;&nbsp;&nbsp;&nbsp;Facebook Scraper | Backend | Archit | mystage-event-sourcing | 3-4 | High | 🟡 Planning / ⏳ In Progress |
-| &nbsp;&nbsp;&nbsp;&nbsp;Venue Merge (Dedupe) | Backend | Drew | mystage-event-sourcing | 1.5-2 | High | ⏳ In Progress |
-| &nbsp;&nbsp;&nbsp;&nbsp;Artist / Performance Merge (Dedupe) | Backend | Drew | mystage-event-sourcing | 3-4 | High | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Data Enrichment Pipeline | Backend | Vaibhav | mystage-event-sourcing | 6-8 | Medium | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Dynamic Scraping System | Backend | Vaibhav | mystage-event-sourcing | 6-8 | Medium | 🟡 Planning / ⏳ In Progress |
-| &nbsp;&nbsp;&nbsp;&nbsp;Extraction Improvements | Backend | Vaibhav | mystage-event-sourcing | 4-6 | Medium | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Pipeline Performance Optimization | Backend | Vaibhav | mystage-event-sourcing | 3-4 | Medium-Low | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Data Retention & Archival | Backend | Drew | mystage-databases | TBD | Low | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Facebook Scraper | Backend | Archit | mystage-event-sourcing | 4 | High | 🟡 Planning / ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Venue Merge (Dedupe) | Backend | Drew | mystage-event-sourcing | 2 | High | ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Artist / Performance Merge (Dedupe) | Backend | Drew | mystage-event-sourcing | 4 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Data Enrichment Pipeline | Backend | Vaibhav | mystage-event-sourcing | 6 | Medium | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Dynamic Scraping System | Backend | Vaibhav | mystage-event-sourcing | 10 | Medium | 🟡 Planning / ⏳ In Progress |
+| &nbsp;&nbsp;&nbsp;&nbsp;Extraction Improvements | Backend | Vaibhav | mystage-event-sourcing | 8 | Medium | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Pipeline Performance Optimization | Backend | Vaibhav | mystage-event-sourcing | 6 | Medium-Low | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Data Retention & Archival | Backend | Drew | mystage-databases | 3 | Low | 🟡 Planning |
 | **User-Facing Features** |||||||
 | &nbsp;&nbsp;&nbsp;&nbsp;Notification System | Frontend | Jerry | mystage-app | 10-12 | High | 🟢 Active |
-| &nbsp;&nbsp;&nbsp;&nbsp;Chat System Integration (Pro-Dash) | Frontend | Jerry | mystage-app | 10-12 | Medium-High | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Stripe Payment Integration Fix | Frontend | Jerry | mystage-app-backend | 2-4 | High | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Profile Onboarding Workflows | Frontend | Jerry | mystage-app | 3-4 | Medium | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Chat System Integration (Pro-Dash) | Frontend | Jerry | mystage-app | 4 | Medium-High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Stripe Payment Integration Fix | Frontend | Jerry | mystage-app-backend | 4 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Profile Onboarding Workflows | Frontend | Jerry | mystage-app | 4 | Medium | 🟡 Planning |
 | **Admin & Internal Tools** |||||||
-| &nbsp;&nbsp;&nbsp;&nbsp;Admin Roles & Access Control | Admin | Elvin | mystage-admin-interface | 2-3 | High | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Admin Pipeline Management Tools | Admin | Elvin | mystage-admin-interface | 6-8 | High | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Admin Content Moderation | Admin | Elvin | mystage-admin-interface | 3-5 | Medium | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Admin Roles & Access Control | Admin | Elvin | mystage-admin-interface | 4 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Admin Pipeline Management Tools | Admin | Elvin | mystage-admin-interface | 4 | High | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Admin Content Moderation | Admin | Elvin | mystage-admin-interface | 4 | Medium | 🟡 Planning |
 | &nbsp;&nbsp;&nbsp;&nbsp;Admin Data Management | Admin | Elvin | mystage-admin-interface | 4-6 | High | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;Chat System Integration (Admin) | Admin | Elvin | mystage-admin-interface | TBD | TBD | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Chat System Integration (Admin) | Admin | Elvin | mystage-admin-interface | 6 | TBD | 🟡 Planning |
 | **Platform & Process** |||||||
-| &nbsp;&nbsp;&nbsp;&nbsp;Platform Documentation & Planning | Platform | Clint | mystage-platform | 3-4 | High | ✅ Complete |
-| &nbsp;&nbsp;&nbsp;&nbsp;Developer Onboarding | Platform | Clint | mystage-platform | 2-3 | Medium | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;Platform Documentation & Planning | Platform | Clint | mystage-platform | 2 | High | ✅ Complete |
+| &nbsp;&nbsp;&nbsp;&nbsp;Developer Onboarding | Platform | Clint | mystage-platform | 4 | Medium | 🟡 Planning |
 | **NFT Sticker Exchange** |||||||
-| &nbsp;&nbsp;&nbsp;&nbsp;NFT Architecture & Design | TBD | TBD | mystage-exchange-nfts | 1-2 | TBD | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;NFT Backend & APIs | TBD | TBD | mystage-exchange-nfts | 10-12 | TBD | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;NFT Admin Tools | TBD | TBD | mystage-admin-interface | 3-4 | TBD | 🟡 Planning |
-| &nbsp;&nbsp;&nbsp;&nbsp;NFT Security & Minting | TBD | TBD | mystage-exchange-nfts | 6-8 | TBD | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;NFT Architecture & Design | TBD | TBD | mystage-exchange-nfts | 2 | TBD | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;NFT Backend & APIs | TBD | TBD | mystage-exchange-nfts | 4 | TBD | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;NFT Admin Tools | TBD | TBD | mystage-admin-interface | 3 | TBD | 🟡 Planning |
+| &nbsp;&nbsp;&nbsp;&nbsp;NFT Security & Minting | TBD | TBD | mystage-exchange-nfts | 4 | TBD | 🟡 Planning |
 
-**Total**: 28 initiatives | **Estimated Effort**: 118-157 weeks | **Active**: 2 | **In Progress**: 7
+**Total**: 26 initiatives | **Estimated Effort**: 117-131 weeks | **Active**: 2 | **In Progress**: 5
 
 ---
 
